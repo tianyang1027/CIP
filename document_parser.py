@@ -29,7 +29,7 @@ def extract_steps_from_right_pane(driver, wait_time=2):
 
     driver.switch_to.frame(iframe)
     driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    time.sleep(1)
+    time.sleep(10)  # wait for content to load
 
     li_elements = driver.find_elements(By.TAG_NAME, "li")
     

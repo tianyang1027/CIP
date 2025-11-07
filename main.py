@@ -14,6 +14,7 @@ def main(page_url: str):
     
     # Open the given page URL
     driver.get(page_url)
+    driver.maximize_window()
     
     # Wait for the sign-in button to be clickable
     sign_in_button = WebDriverWait(driver, 20).until(
@@ -33,8 +34,27 @@ def main(page_url: str):
     standard_steps = extract_steps_from_left_pane(driver)
     actual_steps = extract_steps_from_right_pane(driver)
 
+    # Validate extracted steps
+    if not standard_steps:
+        print("Error: No standard steps found in the left pane.")
+        driver.quit()
+        return
+
+    if not actual_steps:
+        print("Error: No actual steps found in the right pane.")
+        driver.quit()
+        return
+
+    if len(standard_steps) != len(actual_steps):
+        print("Error: Mismatched number of steps.")
+        driver.quit()
+        return
+    
+    print("All checks passed.")
     # Close the browser
     driver.quit()
+
+    print("Comparing steps...")
 
     # Compare the steps and print the report in JSON format
     report = compare_operations(standard_steps, actual_steps)
