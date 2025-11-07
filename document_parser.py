@@ -40,8 +40,8 @@ def extract_steps_from_right_pane(driver, wait_time=2):
             img = img_tag.get_attribute("src")
         except:
             img = None
-        
-        p=li.find_element(By.TAG_NAME, "p")
+
+        p = li.find_element(By.TAG_NAME, "p")
         text = p.text.strip()
         result.append({
             "text": text,
