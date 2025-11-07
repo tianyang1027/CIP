@@ -1,28 +1,31 @@
 import json
-from video_processing import extract_video_operations
-from document_parser import load_standard_operations
-from comparator import compare_operations
-
-VIDEO_PATH = "sample_data/recording.mp4"
-STANDARD_OPS_PATH = "sample_data/standard_ops.json"
+from selenium import webdriver
+from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
+from document_parser import extract_steps_from_left_pane, extract_steps_from_right_pane
+from image_to_steps_check import compare_operations
 
 def main():
-    # 1. 提取视频操作事件
-    video_ops = extract_video_operations(VIDEO_PATH)
-    print("视频操作事件提取完成")
+    driver = webdriver.Edge()
+    driver.get("https://crowdintelligence.azurewebsites.net/triaging/v1/permalink?metric=GenericScenario&auditid=41722&build=25100503323261&hitid=385734864&judgeid=2992258")
     
-    # 2. 加载标准操作
-    standard_ops = load_standard_operations(STANDARD_OPS_PATH)
-    print("标准操作加载完成")
+    sign_in_button = WebDriverWait(driver, 20).until(
+        EC.element_to_be_clickable((By.CLASS_NAME, "signInColor"))
+    )
 
-    # 3. 对比视频操作和标准操作
-    report = compare_operations(video_ops, standard_ops)
+    sign_in_button.click()
+    WebDriverWait(driver, 20).until(
+        EC.presence_of_element_located((By.ID, "leftPane"))
+    )
+    WebDriverWait(driver, 20).until(
+        EC.presence_of_element_located((By.CLASS_NAME, "right-pane.col"))
+    )
+    standard_steps = extract_steps_from_left_pane(driver)
+    actual_steps = extract_steps_from_right_pane(driver)
+    driver.quit()
+    report = compare_operations(standard_steps, actual_steps)
+    print(json.dumps(report, ensure_ascii=False, indent=2))
 
-    # 4. 输出报告
-    with open("operation_report.json", "w", encoding="utf-8") as f:
-        json.dump(report, f, ensure_ascii=False, indent=2)
-
-    print("对比报告生成完成: operation_report.json")
-
-if __name__ == "__main__ ":
+if __name__ == "__main__":
     main()
