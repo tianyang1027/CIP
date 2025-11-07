@@ -4,7 +4,7 @@ import time
 
 def extract_steps_from_left_pane(driver, wait_time=2):
     time.sleep(wait_time)
-    lis = driver.find_elements(By.CSS_SELECTOR, ".left-pane-content.row li")
+    lis = driver.find_elements(By.ID, "leftPane li")
     
     result = []
     for li in lis:
@@ -22,38 +22,22 @@ def extract_steps_from_left_pane(driver, wait_time=2):
 
     return result
 
-def extract_left_pane_content(driver, wait_time=10):
-    time.sleep(wait_time)
-    videos = driver.find_elements(By.TAG_NAME, "video")
-    if videos:
-        for video in videos:
-            src = video.get_attribute("src")
-            if not src:
-                # 有些视频在 <source> 里
-                source_tags = video.find_elements(By.TAG_NAME, "source")
-                for source in source_tags:
-                    src = source.get_attribute("src")
-                    if src:
-                        break
-            if src:
-                result.append({
-                    "type": "video",
-                    "src": src
-                })
-        return result
 
-    # === 2️⃣ 否则提取 li 的文字和图片 ===
-    lis = container.find_elements(By.TAG_NAME, "li")
+def extract_steps_from_right_pane(driver, wait_time=2):
+    time.sleep(wait_time)
+    lis = driver.find_elements(By.CSS_SELECTOR, ".right-pane.col li")
+    
+    result = []
     for li in lis:
-        text = li.text.strip()
         try:
             img_tag = li.find_element(By.TAG_NAME, "img")
             img = img_tag.get_attribute("src")
         except:
             img = None
-
+        
+        p=li.find_element(By.TAG_NAME, "p")
+        text = p.text.strip()
         result.append({
-            "type": "step",
             "text": text,
             "img": img
         })
