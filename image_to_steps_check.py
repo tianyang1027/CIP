@@ -109,7 +109,10 @@ def check_steps_final_summary(client, steps_json):
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_content}
         ],
-        temperature=0
+        max_tokens = 1500,
+        temperature = 0.0,
+        top_p = 1.0,
+        timeout = 120
     )
 
     content = response.choices[0].message.content.strip()
