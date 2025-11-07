@@ -4,7 +4,7 @@ import time
 
 def extract_steps_from_left_pane(driver, wait_time=2):
     time.sleep(wait_time)
-    lis = driver.find_elements(By.ID, "leftPane li")
+    lis = driver.find_elements(By.XPATH, "//*[@id='leftPane']//li")
     
     result = []
     for li in lis:
@@ -25,10 +25,16 @@ def extract_steps_from_left_pane(driver, wait_time=2):
 
 def extract_steps_from_right_pane(driver, wait_time=2):
     time.sleep(wait_time)
-    lis = driver.find_elements(By.CSS_SELECTOR, ".right-pane.col li")
+    iframe = driver.find_element(By.CSS_SELECTOR, "#judge-comment iframe")
+
+    driver.switch_to.frame(iframe)
+    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
+    time.sleep(1)
+
+    li_elements = driver.find_elements(By.TAG_NAME, "li")
     
     result = []
-    for li in lis:
+    for li in li_elements:
         try:
             img_tag = li.find_element(By.TAG_NAME, "img")
             img = img_tag.get_attribute("src")
