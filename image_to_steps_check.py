@@ -201,9 +201,7 @@ def compare_operations(standard_steps, actual_steps):
     )
 
     steps_json = build_steps_json(standard_steps, actual_steps)
-
     result = check_steps_final_summary(client, steps_json)
-    print(json.dumps(result, ensure_ascii=False, indent=2))
     return result
 
 
