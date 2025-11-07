@@ -192,7 +192,7 @@ def check_steps_final_summary(client, steps_json):
     return {"final_summary": {"final_result": final_result, "reason": reason}}
 
 
-def main():
+def compare_operations(standard_steps, actual_steps):
     # Initialize Azure OpenAI client
     client = AzureOpenAI(
         api_key=os.getenv("AZURE_OPENAI_APIKEY"),
@@ -200,28 +200,25 @@ def main():
         api_version=os.getenv("AZURE_OPENAIAPI_VERSION")
     )
 
-    # Example step data
-    steps_json = [
-        {
-            "step_number": 1,
-            "standard": {"text": "Open Control Panel", "image_path": "step1.png"},
-            "actual": {"text": "Open Control Panel", "image_path": "step1_actual.png"}
-        },
-        {
-            "step_number": 2,
-            "standard": {"text": "Click 'Network and Internet'", "image_path": "step2.png"},
-            "actual": {"text": "Click 'Network and Network'", "image_path": "step2_actual.png"}
-        },
-        {
-            "step_number": 3,
-            "standard": {"text": "Open Device Manager", "image_path": "step3.png"},
-            "actual": {"text": "Watch a YouTube video", "image_path": "step3_actual.png"}
-        }
-    ]
+    steps_json = build_steps_json(standard_steps, actual_steps)
 
     result = check_steps_final_summary(client, steps_json)
     print(json.dumps(result, ensure_ascii=False, indent=2))
+    return result
 
 
-if __name__ == "__main__":
-    main()
+def build_steps_json(standard_steps, actual_steps):
+    steps_json = []
+    total_steps = max(len(standard_steps), len(actual_steps))
+
+    for i in range(total_steps):
+        standard = standard_steps[i] if i < len(standard_steps) else {"text": "", "img": None}
+        actual = actual_steps[i] if i < len(actual_steps) else {"text": "", "img": None}
+
+        steps_json.append({
+            "step_number": i + 1,
+            "standard": {"text": standard["text"], "image_path": standard["img"]},
+            "actual": {"text": actual["text"], "image_path": actual["img"]}
+        })
+
+    return steps_json
