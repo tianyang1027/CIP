@@ -65,7 +65,7 @@ def run_check(page_url: str):
 
 def main():
     """Streamlit app entry point."""
-    st.title("🔍 Web Steps Comparison Tool (Selenium + Streamlit)")
+    st.title("🔍 Crowd Intelligence Platform AI Tool (GPT + Selenium + Streamlit)")
     st.write("Enter a webpage URL to automatically log in, extract, and compare the left and right pane steps.")
 
     # Input field for page URL

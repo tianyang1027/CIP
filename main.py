@@ -32,7 +32,9 @@ def main(page_url: str):
 
     # Extract standard steps and actual steps from the page
     standard_steps = extract_steps_from_left_pane(driver)
+    print(f"Standard steps extracted: {len(standard_steps)}")
     actual_steps = extract_steps_from_right_pane(driver)
+    print(f"Actual steps extracted: {len(actual_steps)}")
 
     # Validate extracted steps
     if not standard_steps:
@@ -73,8 +75,9 @@ def main(page_url: str):
 if __name__ == "__main__":
     # Ensure the user provides a page URL
     if len(sys.argv) < 2:
-        print("Please provide a page URL, e.g., python script.py <page_url>")
+        print("Please provide a page URL:")
         sys.exit(1)
     
     page_url = sys.argv[1]
+    print(f"Starting check for URL: {page_url}")
     main(page_url)
