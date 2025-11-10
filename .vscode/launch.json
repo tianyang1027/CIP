@@ -16,16 +16,18 @@
 // }
 
 {
+    "version": "0.2.0",
     "configurations": [
         {
-            "name": "Python Debugger: Module",
+            "name": "Streamlit (Python Debugger)",
             "type": "debugpy",
             "request": "launch",
-            "module": "main",
-            "console": "integratedTerminal",
+            "module": "streamlit",
             "args": [
-                "https://crowdintelligence.azurewebsites.net/triaging/v1/permalink?metric=GenericScenario&auditid=41722&build=25100503323261&hitid=385734864&judgeid=2992258"
+                "run",
+                "${workspaceFolder}/streamlit_app.py"
             ],
+            "console": "integratedTerminal"
         }
     ]
 }
