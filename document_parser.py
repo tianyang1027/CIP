@@ -1,6 +1,11 @@
+from selenium import webdriver
 from selenium.webdriver.common.by import By
+from selenium.webdriver.support.ui import WebDriverWait
+from selenium.webdriver.support import expected_conditions as EC
 import json
 import time
+
+
 
 def extract_steps_from_left_pane(driver, wait_time=2):
     time.sleep(wait_time)
@@ -24,13 +29,12 @@ def extract_steps_from_left_pane(driver, wait_time=2):
 
 
 def extract_steps_from_right_pane(driver, wait_time=2):
-    time.sleep(wait_time)
+    wait = WebDriverWait(driver, 20)
     iframe = driver.find_element(By.CSS_SELECTOR, "#judge-comment iframe")
-
     driver.switch_to.frame(iframe)
-    driver.execute_script("window.scrollTo(0, document.body.scrollHeight);")
-    time.sleep(10)  # wait for content to load
-
+    wait.until(
+        lambda d: d.execute_script("return document.readyState") == "complete"
+    )
     li_elements = driver.find_elements(By.TAG_NAME, "li")
     
     result = []
@@ -48,4 +52,5 @@ def extract_steps_from_right_pane(driver, wait_time=2):
             "img": img
         })
 
+    driver.switch_to.default_content()
     return result
