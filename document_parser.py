@@ -6,7 +6,6 @@ import json
 import time
 
 
-
 def extract_steps_from_left_pane(driver, wait_time=2):
     time.sleep(wait_time)
     lis = driver.find_elements(By.XPATH, "//*[@id='leftPane']//li")

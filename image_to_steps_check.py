@@ -2,7 +2,7 @@ import os
 import base64
 from io import BytesIO
 from PIL import Image
-from azure_openai_client import AzureOpenAIClient
+from client_manager import ClientManager
 import json
 
 # Supported image formats
@@ -46,7 +46,7 @@ def encode_image_to_base64(path):
         return base64.b64encode(image_data).decode("utf-8")
 
 
-def check_steps_final_summary(client, steps_json):
+def check_steps_final_summary(steps_json):
     """
     Ask the model to internally evaluate each step but return ONLY a final_summary JSON object:
     {
@@ -60,24 +60,22 @@ def check_steps_final_summary(client, steps_json):
         "You are an intelligent computer operation step checking assistant. "
         "You must carefully compare a series of computer operation steps performed by a user against the given standard steps. "
         "Each step includes a text description and may include an image for visual verification.\n\n"
-
         "Important instructions (READ CAREFULLY):\n"
         "1) Analyze EACH step in detail (text and image) and decide internally whether it is Correct, Incorrect, Spam, or NeedDiscussion. "
         "However, DO NOT output the per-step judgments. Keep those evaluations internal only.\n"
         "2) After analyzing all steps, produce ONLY a single JSON object named `final_summary` describing the overall result.\n"
         "3) The overall decision rules (priority) are:\n"
-        "   - If any step is Spam (completely unrelated or nonsensical) => final_result = \"Spam\".\n"
-        "   - Else if any step is NeedDiscussion (ambiguous / requires human review) => final_result = \"NeedDiscussion\".\n"
-        "   - Else if any step is Incorrect => final_result = \"Incorrect\".\n"
-        "   - Else (all steps are Correct) => final_result = \"Correct\".\n"
+        '   - If any step is Spam (completely unrelated or nonsensical) => final_result = "Spam".\n'
+        '   - Else if any step is NeedDiscussion (ambiguous / requires human review) => final_result = "NeedDiscussion".\n'
+        '   - Else if any step is Incorrect => final_result = "Incorrect".\n'
+        '   - Else (all steps are Correct) => final_result = "Correct".\n'
         "4) The final JSON object MUST have EXACTLY this shape and NOTHING else (no extra text):\n"
         "{\n"
-        "  \"final_summary\": {\n"
-        "    \"final_result\": \"Correct\" | \"Incorrect\" | \"Spam\" | \"NeedDiscussion\",\n"
-        "    \"reason\": \"<A concise explanation for the final_result>\"\n"
+        '  "final_summary": {\n'
+        '    "final_result": "Correct" | "Incorrect" | "Spam" | "NeedDiscussion",\n'
+        '    "reason": "<A concise explanation for the final_result>"\n'
         "  }\n"
         "}\n\n"
-
         "Additional guidance:\n"
         "- If an earlier step is incorrect, you must still analyze later steps and then apply the priority rules above to reach the final result.\n"
         "- The reason should summarize the main cause for the final decision (mention spam/ambiguity/which step(s) cause it, but keep it concise).\n"
@@ -97,25 +95,33 @@ def check_steps_final_summary(client, steps_json):
         user_content.append({"type": "text", "text": f"StepNumber: {step_num}"})
         user_content.append({"type": "text", "text": f"StandardText: {std_text}"})
         if std_img:
-            user_content.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{std_img}"}})
+            user_content.append(
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{std_img}"},
+                }
+            )
         user_content.append({"type": "text", "text": f"ActualText: {act_text}"})
         if act_img:
-            user_content.append({"type": "image_url", "image_url": {"url": f"data:image/jpeg;base64,{act_img}"}})
+            user_content.append(
+                {
+                    "type": "image_url",
+                    "image_url": {"url": f"data:image/jpeg;base64,{act_img}"},
+                }
+            )
 
     # Call the model
-    response = client.chat.completions.create(
-        model="gpt-4.1",  # or "gpt-4v" if available and you pass images
+    content = ClientManager().chat_completion(
         messages=[
             {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_content}
+            {"role": "user", "content": user_content},
         ],
-        max_tokens = 1500,
-        temperature = 0.0,
-        top_p = 1.0,
-        timeout = 120
+        model="gpt-4.1",
+        max_tokens=1500,
+        temperature=0.0,
+        top_p=1.0,
+        timeout=120,
     )
-
-    content = response.choices[0].message.content.strip()
 
     # Try to parse JSON and extract final_summary
     try:
@@ -134,7 +140,7 @@ def check_steps_final_summary(client, steps_json):
             return {
                 "final_summary": {
                     "final_result": "NeedDiscussion",
-                    "reason": "Model output was not valid JSON; manual review required. See raw output."
+                    "reason": "Model output was not valid JSON; manual review required. See raw output.",
                 }
             }
 
@@ -150,7 +156,7 @@ def check_steps_final_summary(client, steps_json):
         elif "final_result" in parsed:
             final = {
                 "final_result": parsed.get("final_result"),
-                "reason": parsed.get("reason", "")
+                "reason": parsed.get("reason", ""),
             }
         else:
             # maybe the model returned a wrapper like [{"final_summary": {...}}]
@@ -166,7 +172,10 @@ def check_steps_final_summary(client, steps_json):
                     final = item["final_summary"]
                     break
                 if "final_result" in item:
-                    final = {"final_result": item.get("final_result"), "reason": item.get("reason", "")}
+                    final = {
+                        "final_result": item.get("final_result"),
+                        "reason": item.get("reason", ""),
+                    }
                     break
 
     if final is None:
@@ -176,7 +185,7 @@ def check_steps_final_summary(client, steps_json):
         return {
             "final_summary": {
                 "final_result": "NeedDiscussion",
-                "reason": "Model did not return a recognized final_summary structure; manual review required."
+                "reason": "Model did not return a recognized final_summary structure; manual review required.",
             }
         }
 
@@ -188,7 +197,7 @@ def check_steps_final_summary(client, steps_json):
         return {
             "final_summary": {
                 "final_result": "NeedDiscussion",
-                "reason": "Model returned unknown final_result value; manual review required."
+                "reason": "Model returned unknown final_result value; manual review required.",
             }
         }
 
@@ -196,10 +205,8 @@ def check_steps_final_summary(client, steps_json):
 
 
 def compare_operations(standard_steps, actual_steps):
-    # Initialize Azure OpenAI client
-    client = AzureOpenAIClient().client
     steps_json = build_steps_json(standard_steps, actual_steps)
-    result = check_steps_final_summary(client, steps_json)
+    result = check_steps_final_summary(steps_json)
     return result
 
 
@@ -208,13 +215,17 @@ def build_steps_json(standard_steps, actual_steps):
     total_steps = max(len(standard_steps), len(actual_steps))
 
     for i in range(total_steps):
-        standard = standard_steps[i] if i < len(standard_steps) else {"text": "", "img": None}
+        standard = (
+            standard_steps[i] if i < len(standard_steps) else {"text": "", "img": None}
+        )
         actual = actual_steps[i] if i < len(actual_steps) else {"text": "", "img": None}
 
-        steps_json.append({
-            "step_number": i + 1,
-            "standard": {"text": standard["text"], "image_path": standard["img"]},
-            "actual": {"text": actual["text"], "image_path": actual["img"]}
-        })
+        steps_json.append(
+            {
+                "step_number": i + 1,
+                "standard": {"text": standard["text"], "image_path": standard["img"]},
+                "actual": {"text": actual["text"], "image_path": actual["img"]},
+            }
+        )
 
     return steps_json
