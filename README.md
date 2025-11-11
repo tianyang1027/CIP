@@ -17,7 +17,7 @@ To pack:
 pyinstaller --onedir --paths=. --name CIP_tool main.py
 ```
 
-To run exe:
+To run:
 ```
 CIP_tool.exe "<CIP item detail page link>"
 ```
