@@ -1,5 +1,5 @@
 # Introduction 
-This tool uses AI to judge the results from the Crowd Intelligence Platform Judger..
+This tool uses AI to judge the results from the Crowd Intelligence Platform Judger.
 
 ## Prerequisites
 
