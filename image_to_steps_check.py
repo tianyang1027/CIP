@@ -2,7 +2,7 @@ import os
 import base64
 from io import BytesIO
 from PIL import Image
-from openai import AzureOpenAI
+from azure_openai_client import AzureOpenAIClient
 import json
 
 # Supported image formats
@@ -197,12 +197,7 @@ def check_steps_final_summary(client, steps_json):
 
 def compare_operations(standard_steps, actual_steps):
     # Initialize Azure OpenAI client
-    client = AzureOpenAI(
-        api_key=os.getenv("AZURE_OPENAI_APIKEY"),
-        azure_endpoint=os.getenv("AZURE_OPENAI_ENDPOINT"),
-        api_version=os.getenv("AZURE_OPENAIAPI_VERSION")
-    )
-
+    client = AzureOpenAIClient().client
     steps_json = build_steps_json(standard_steps, actual_steps)
     result = check_steps_final_summary(client, steps_json)
     return result
