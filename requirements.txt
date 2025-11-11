@@ -1,7 +1,2 @@
-opencv-python
-pytesseract
-numpy
-Pillow
-ultralytics
+openai
 selenium
-PaddleOCR
