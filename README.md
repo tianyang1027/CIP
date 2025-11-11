@@ -3,7 +3,7 @@ This tool uses AI to judge the results from the Crowd Intelligence Platform Judg
 
 ## Prerequisites
 
-- Visual Studio code with python 3.11 +
+- Visual Studio Code with Python 3.11 +
 
 ## Build and debug steps
 
