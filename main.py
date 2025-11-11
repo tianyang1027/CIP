@@ -63,14 +63,14 @@ def main(page_url: str):
     print(json.dumps(report, ensure_ascii=False, indent=2))
 
     # Ensure the file is saved in the root directory
-    root_dir = os.path.dirname(os.path.abspath(__file__))
-    output_path = os.path.join(root_dir, "report.txt")
+    # root_dir = os.path.dirname(os.path.abspath(__file__))
+    # output_path = os.path.join(root_dir, "report.txt")
 
     # Write the JSON report to the file
-    with open(output_path, "w", encoding="utf-8") as f:
-        json.dump(report, f, ensure_ascii=False, indent=2)
+    # with open(output_path, "w", encoding="utf-8") as f:
+    #     json.dump(report, f, ensure_ascii=False, indent=2)
     
-    print(f"Report saved to {output_path}")
+    # print(f"Report saved to {output_path}")
 
 if __name__ == "__main__":
     # Ensure the user provides a page URL
