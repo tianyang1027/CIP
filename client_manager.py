@@ -61,24 +61,15 @@ class ClientManager:
         """
 
         try:
-            if self.mode == "azure":
-                response = self.client.chat.completions.create(
-                    model=model,
-                    messages=messages,
-                    max_tokens=max_tokens,
-                    temperature=temperature,
-                    top_p=top_p,
-                    timeout=timeout,
-                )
-            else:  # official OpenAI
-                response = self.client.completions.create(
-                    model=model,
-                    messages=messages,
-                    max_tokens=max_tokens,
-                    temperature=temperature,
-                    top_p=top_p,
-                    timeout=timeout,
-                )
+
+            response = self.client.chat.completions.create(
+                model=model,
+                messages=messages,
+                max_tokens=max_tokens,
+                temperature=temperature,
+                top_p=top_p,
+                timeout=timeout,
+            )
 
             if response.choices and len(response.choices) > 0:
                 return response.choices[0].message.content.strip()
