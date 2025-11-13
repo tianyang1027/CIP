@@ -2,7 +2,7 @@ import os
 import base64
 from io import BytesIO
 from PIL import Image
-from client_manager import ClientManager
+from llm.client_manager import ClientManager
 import json
 
 # Supported image formats
