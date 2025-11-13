@@ -5,8 +5,8 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from document_parser import extract_steps_from_left_pane, extract_steps_from_right_pane
-from image_to_steps_check import compare_operations
+from parsers.document_parser import extract_steps_from_left_pane, extract_steps_from_right_pane
+from llm.image_to_steps_check import compare_operations
 
 
 def main(page_url: str):
