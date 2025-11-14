@@ -5,45 +5,6 @@ from PIL import Image
 from llm.client_manager import ClientManager
 import json
 
-# Supported image formats
-SUPPORTED_EXT = [".jpg", ".jpeg", ".png", ".bmp", ".gif", ".webp"]
-MAX_IMAGE_SIZE_MB = 20
-
-
-def get_file_size_in_mb(filepath):
-    return os.path.getsize(filepath) / (1024 * 1024)
-
-
-def get_image_size_in_mb(data):
-    return len(data) / (1024 * 1024)
-
-
-def encode_image_to_base64(path):
-    """Encode an image to base64. Compress/resize if larger than MAX_IMAGE_SIZE_MB."""
-    if not path or not os.path.exists(path):
-        return None
-
-    if get_file_size_in_mb(path) <= MAX_IMAGE_SIZE_MB:
-        with open(path, "rb") as f:
-            return base64.b64encode(f.read()).decode("utf-8")
-
-    with Image.open(path) as img:
-        img_format = "JPEG"
-        img = img.convert("RGB")
-        buffer = BytesIO()
-        img.save(buffer, format=img_format, optimize=True, quality=85)
-        image_data = buffer.getvalue()
-
-        # Iteratively resize until under limit
-        while get_image_size_in_mb(image_data) > MAX_IMAGE_SIZE_MB:
-            new_width = max(1, int(img.width * 0.9))
-            new_height = max(1, int(img.height * 0.9))
-            img = img.resize((new_width, new_height), Image.ANTIALIAS)
-            buffer = BytesIO()
-            img.save(buffer, format=img_format, optimize=True, quality=85)
-            image_data = buffer.getvalue()
-
-        return base64.b64encode(image_data).decode("utf-8")
 
 
 def check_steps_final_summary(steps_json):
@@ -88,27 +49,29 @@ def check_steps_final_summary(steps_json):
         step_num = step.get("step_number")
         std_text = step["standard"].get("text", "")
         act_text = step["actual"].get("text", "")
-        std_img = encode_image_to_base64(step["standard"].get("image_path"))
-        act_img = encode_image_to_base64(step["actual"].get("image_path"))
+        std_image_path = step["standard"].get("image_path")
+        act_image_path = step["actual"].get("image_path")
 
         # Add a compact, clear description for each step
         user_content.append({"type": "text", "text": f"StepNumber: {step_num}"})
+        
         user_content.append({"type": "text", "text": f"StandardText: {std_text}"})
-        if std_img:
+        if std_image_path:
             user_content.append(
                 {
                     "type": "image_url",
-                    "image_url": {"url": f"data:image/jpeg;base64,{std_img}"},
+                    "image_url": {"url": std_image_path},
                 }
             )
+
         user_content.append({"type": "text", "text": f"ActualText: {act_text}"})
-        if act_img:
+        if act_image_path:
             user_content.append(
                 {
                     "type": "image_url",
-                    "image_url": {"url": f"data:image/jpeg;base64,{act_img}"},
-                }
-            )
+                    "image_url": {"url": act_image_path},
+            }
+        )
 
     # Call the model
     content = ClientManager().chat_completion(
