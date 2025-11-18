@@ -6,7 +6,7 @@ from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from parsers.document_parser import extract_steps_from_left_pane, extract_steps_from_right_pane
-from llm.image_to_steps_check import validate_all_steps, build_steps_json
+from llm.image_to_steps_check import compare_operations
 
 
 def main(page_url: str):
@@ -58,8 +58,7 @@ def main(page_url: str):
     print("Comparing steps...")
 
     # Compare the steps and print the report in JSON format
-    steps_json = build_steps_json(standard_steps, actual_steps)
-    report = validate_all_steps(steps_json)
+    report = compare_operations(standard_steps, actual_steps)
     print(json.dumps(report, ensure_ascii=False, indent=2))
 
     # Ensure the file is saved in the root directory

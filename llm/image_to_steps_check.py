@@ -23,6 +23,7 @@ def check_steps_with_image_matching(steps_json):
         "Each step has a standard text and an actual step image (URL).\n"
         "Your goal is to determine whether each actual image matches the standard step text.\n\n"
 
+        "==================== OVERRIDE RULE (Edge Browser Settings) ====================\n"
         "IMPORTANT OVERRIDE RULE:\n"
         "- If the standard step describes **Microsoft Edge browser settings, configuration, or setup operations**, "
         "then this step must be automatically judged as **Correct**, without checking or comparing the actual image at all.\n"
@@ -38,18 +39,21 @@ def check_steps_with_image_matching(steps_json):
         '  result = "Correct"\n'
         "  reason = \"This is an Edge browser setting step, automatically considered correct as instructed.\"\n\n"
 
+        "==================== NORMAL STEP JUDGMENT RULES ====================\n"
         "For all other non-browser-setting steps, follow the normal rules below:\n"
         "- Correct: The image clearly shows the step was performed as described.\n"
         "- Incorrect: The image deviates from the standard step.\n"
         "- Spam: The image is unrelated or nonsensical.\n"
         "- NeedDiscussion: Image is unclear or ambiguous.\n\n"
 
+        "==================== FINAL SUMMARY RULES ====================\n"
         "Final summary rules:\n"
         "- If any step is Spam → final_result = 'Spam'\n"
         "- Else if any step is NeedDiscussion → final_result = 'NeedDiscussion'\n"
         "- Else if any non-browser-setting step is Incorrect → final_result = 'Incorrect'\n"
         "- Else (all steps are Correct) → final_result = 'Correct'\n\n"
 
+        "==================== OUTPUT FORMAT ====================\n"
         "Output JSON strictly in this format:\n"
         "{\n"
         '  "step_results": [\n'
