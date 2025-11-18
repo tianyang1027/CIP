@@ -209,6 +209,47 @@ def compare_operations(standard_steps, actual_steps):
     result = check_steps_final_summary(steps_json)
     return result
 
+def is_edge_setting_step(text):
+    """Check if the step is about Edge browser settings using AI. Return True if it should be skipped."""
+    if not text or text.strip() == "":
+        return False
+    
+    system_prompt = (
+        "You are a helpful assistant that determines whether a given step description is related to "
+        "Microsoft Edge browser settings, configuration, or setup operations. "
+        "These include actions like:\n"
+        "- Opening Edge settings or preferences\n"
+        "- Configuring browser options\n"
+        "- Setting up profiles or accounts\n"
+        "- Adjusting security, privacy, or extension settings\n"
+        "- Managing startup behavior or homepage\n"
+        "- Any other Edge browser configuration tasks\n\n"
+        "Respond with ONLY 'Yes' if the step is about Edge browser settings/configuration, "
+        "or 'No' if it is not. No explanation needed."
+    )
+    
+    try:
+        response = ClientManager().chat_completion(
+            messages=[
+                {"role": "system", "content": system_prompt},
+                {"role": "user", "content": f"Is this step about Edge browser settings or configuration?\n\nStep: {text}"},
+            ],
+            model="gpt-4.1",
+            max_tokens=10,
+            temperature=0.0,
+            top_p=1.0,
+            timeout=30,
+        )
+        
+        # Check if the response indicates it's an Edge setting step
+        is_edge_setting = response.strip().lower().startswith("yes")
+        return is_edge_setting
+    except Exception as e:
+        print(f"Error checking if step is Edge setting: {e}")
+        # Default to False if there's an error
+        return False
+
+
 
 def build_steps_json(standard_steps, actual_steps):
     steps_json = []
@@ -219,6 +260,11 @@ def build_steps_json(standard_steps, actual_steps):
             standard_steps[i] if i < len(standard_steps) else {"text": "", "img": None}
         )
         actual = actual_steps[i] if i < len(actual_steps) else {"text": "", "img": None}
+
+        # Skip this step if the standard step is about Edge settings
+        if is_edge_setting_step(standard["text"]):
+            print(f"Skipping step {i + 1} (Edge setting step): {standard['text']}")
+            continue
 
         steps_json.append(
             {
