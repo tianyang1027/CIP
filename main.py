@@ -5,8 +5,12 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from parsers.document_parser import extract_steps_from_left_pane, extract_steps_from_right_pane
+from parsers.document_parser import (
+    extract_steps_from_left_pane,
+    extract_steps_from_right_pane,
+)
 from llm.image_to_steps_check import compare_operations
+from enums.issue_type import IssueType  
 
 
 def main(page_url: str):
@@ -56,6 +60,20 @@ def main(page_url: str):
     driver.quit()
 
     print("Comparing steps...")
+
+    issue_type =driver.find_element(By.CLASS_NAME, "textColorRed").text
+    print(f"Issue Type: {issue_type}")
+
+    if issue_type == IssueType.feature_not_found.value:
+        print("Feature not found, skipping comparison.")
+        return
+    
+    if issue_type == IssueType.no_issue_found.value:
+        print("No issue found, skipping comparison.")
+        return
+    
+    if issue_type == IssueType.issue_found.value:
+        print("Issue found, proceeding with comparison.")
 
     # Compare the steps and print the report in JSON format
     report = compare_operations(standard_steps, actual_steps)
