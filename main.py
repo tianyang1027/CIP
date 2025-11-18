@@ -5,7 +5,10 @@ from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from parsers.document_parser import extract_steps_from_left_pane, extract_steps_from_right_pane
+from parsers.document_parser import (
+    extract_steps_from_left_pane,
+    extract_steps_from_right_pane,
+)
 from llm.image_to_steps_check import compare_operations
 
 
@@ -28,6 +31,9 @@ def main(page_url: str):
     WebDriverWait(driver, 20).until(
         EC.presence_of_element_located((By.CLASS_NAME, "right-pane.col"))
     )
+
+    issue_type = driver.find_element(By.CLASS_NAME, "textColorRed").text
+    print(f"Issue Type: {issue_type}")
 
     # Extract standard steps and actual steps from the page
     standard_steps = extract_steps_from_left_pane(driver)
@@ -58,18 +64,8 @@ def main(page_url: str):
     print("Comparing steps...")
 
     # Compare the steps and print the report in JSON format
-    report = compare_operations(standard_steps, actual_steps)
+    report = compare_operations(standard_steps, actual_steps, issue_type)
     print(json.dumps(report, ensure_ascii=False, indent=2))
-
-    # Ensure the file is saved in the root directory
-    # root_dir = os.path.dirname(os.path.abspath(__file__))
-    # output_path = os.path.join(root_dir, "report.txt")
-
-    # Write the JSON report to the file
-    # with open(output_path, "w", encoding="utf-8") as f:
-    #     json.dump(report, f, ensure_ascii=False, indent=2)
-
-    # print(f"Report saved to {output_path}")
 
 
 if __name__ == "__main__":
