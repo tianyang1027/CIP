@@ -1,91 +1,35 @@
 import json
 from llm.client_manager import ClientManager
+from enums.issue_enum import IssueEnum
+from utils.file_utils import load_prompt
 
-# just for no issue found
-def check_steps_with_image_matching(steps_json):
-    """
-    GPT matches each actual step image against the standard step text.
-    Output format:
-    {
-        "step_results": [
-            {"step_number": 1, "result": "Correct"|"Incorrect"|"Spam"|"NeedDiscussion", "reason": "..."},
-            ...
-        ],
-        "final_summary": {
-            "final_result": "Correct"|"Incorrect"|"Spam"|"NeedDiscussion",
-            "reason": "..."
-        }
+
+def check_steps_with_image_matching(steps_json, issue_type):
+
+    PROMPT_FILES = {
+        IssueEnum.FEATURE_NOT_FOUND.value: "./llm/prompts/image_feature_not_found_prompt.txt",
+        IssueEnum.NO_ISSUE_FOUND.value: "./llm/prompts/image_no_issue_found_prompt.txt",
+        IssueEnum.ISSUE_FOUND.value: "./llm/prompts/image_issue_found_prompt.txt",
     }
-    """
 
-    system_prompt = (
-        "You are an intelligent step checking assistant.\n"
-        "Each step has a standard text and an actual step image (URL).\n"
-        "Your goal is to determine whether each actual image matches the standard step text.\n\n"
-
-        "==================== OVERRIDE RULE (Edge Browser Settings) ====================\n"
-        "IMPORTANT OVERRIDE RULE:\n"
-        "- If the standard step describes **Microsoft Edge browser settings, configuration, or setup operations**, "
-        "then this step must be automatically judged as **Correct**, without checking or comparing the actual image at all.\n"
-        "- Completely ignore the screenshot for such steps.\n"
-        "- These Edge browser setting/configuration steps include actions like:\n"
-        "  - Opening Edge settings or preferences\n"
-        "  - Configuring browser options\n"
-        "  - Setting up profiles or accounts\n"
-        "  - Adjusting security/privacy/extension settings\n"
-        "  - Managing startup behavior or homepage\n"
-        "  - Any other Edge browser configuration tasks\n"
-        "- For these steps, always output:\n"
-        '  result = "Correct"\n'
-        "  reason = \"This is an Edge browser setting step, automatically considered correct as instructed.\"\n\n"
-
-        "==================== NORMAL STEP JUDGMENT RULES ====================\n"
-        "For all other non-browser-setting steps, follow the normal rules below:\n"
-        "- Correct: The image clearly shows the step was performed as described.\n"
-        "- Incorrect: The image deviates from the standard step.\n"
-        "- Spam: The image is unrelated or nonsensical.\n"
-        "- NeedDiscussion: Image is unclear or ambiguous.\n\n"
-
-        "==================== FINAL SUMMARY RULES ====================\n"
-        "Final summary rules:\n"
-        "- If any step is Spam → final_result = 'Spam'\n"
-        "- Else if any step is NeedDiscussion → final_result = 'NeedDiscussion'\n"
-        "- Else if any non-browser-setting step is Incorrect → final_result = 'Incorrect'\n"
-        "- Else (all steps are Correct) → final_result = 'Correct'\n\n"
-
-        "==================== OUTPUT FORMAT ====================\n"
-        "Output JSON strictly in this format:\n"
-        "{\n"
-        '  "step_results": [\n'
-        '    {"step_number": 1, "result": "Correct"|"Incorrect"|"Spam"|"NeedDiscussion", "reason": "<reason>"},\n'
-        '    ...\n'
-        '  ],\n'
-        '  "final_summary": {\n'
-        '    "final_result": "Correct"|"Incorrect"|"Spam"|"NeedDiscussion",\n'
-        '    "reason": "<final reason>"\n'
-        '  }\n'
-        "}\n\n"
-
-        "Notes:\n"
-        "1) Every step must include a result and a reason.\n"
-        "2) Follow the OVERRIDE RULE strictly for Edge browser setting steps.\n"
-        "3) Do not output anything except JSON."
-    )
+    # Load the system prompt based on issue type
+    system_prompt = load_prompt(PROMPT_FILES.get(issue_type))
 
     # Prepare structured user content with 'type' fields
     user_content_structured = []
     for step in steps_json:
         # standard step text
-        user_content_structured.append({
-            "type": "text",
-            "text": f"Step {step['step_number']} standard_text: {step['standard_text']}"
-        })
+        user_content_structured.append(
+            {
+                "type": "text",
+                "text": f"Step {step['step_number']} standard_text: {step['standard_text']}",
+            }
+        )
         # actual step image
         if step.get("actual_image_url"):
-            user_content_structured.append({
-                "type": "image_url",
-                "image_url": {"url": step["actual_image_url"]}
-            })
+            user_content_structured.append(
+                {"type": "image_url", "image_url": {"url": step["actual_image_url"]}}
+            )
 
     # Call GPT model
     content = ClientManager().chat_completion(
@@ -115,8 +59,8 @@ def check_steps_with_image_matching(steps_json):
                 "step_results": [],
                 "final_summary": {
                     "final_result": "NeedDiscussion",
-                    "reason": "Model output cannot be parsed, manual review required"
-                }
+                    "reason": "Model output cannot be parsed, manual review required",
+                },
             }
 
     # Validate final_summary
@@ -127,15 +71,13 @@ def check_steps_with_image_matching(steps_json):
         final_reason = "Model returned unknown final_result, manual review required"
         final = {"final_result": final_result, "reason": final_reason}
 
-    return {
-        "step_results": parsed.get("step_results", []),
-        "final_summary": final
-    }
+    return {"step_results": parsed.get("step_results", []), "final_summary": final}
 
 
-def compare_operations(standard_steps, actual_steps):
+def compare_operations(standard_steps, actual_steps, issue_type):
+
     steps_json = build_steps_json(standard_steps, actual_steps)
-    result = check_steps_with_image_matching(steps_json)
+    result = check_steps_with_image_matching(steps_json, issue_type)
     return result
 
 

@@ -10,7 +10,6 @@ from parsers.document_parser import (
     extract_steps_from_right_pane,
 )
 from llm.image_to_steps_check import compare_operations
-from enums.issue_type import IssueType  
 
 
 def main(page_url: str):
@@ -32,6 +31,9 @@ def main(page_url: str):
     WebDriverWait(driver, 20).until(
         EC.presence_of_element_located((By.CLASS_NAME, "right-pane.col"))
     )
+
+    issue_type = driver.find_element(By.CLASS_NAME, "textColorRed").text
+    print(f"Issue Type: {issue_type}")
 
     # Extract standard steps and actual steps from the page
     standard_steps = extract_steps_from_left_pane(driver)
@@ -61,33 +63,9 @@ def main(page_url: str):
 
     print("Comparing steps...")
 
-    issue_type =driver.find_element(By.CLASS_NAME, "textColorRed").text
-    print(f"Issue Type: {issue_type}")
-
-    if issue_type == IssueType.feature_not_found.value:
-        print("Feature not found, skipping comparison.")
-        return
-    
-    if issue_type == IssueType.no_issue_found.value:
-        print("No issue found, skipping comparison.")
-        return
-    
-    if issue_type == IssueType.issue_found.value:
-        print("Issue found, proceeding with comparison.")
-
     # Compare the steps and print the report in JSON format
-    report = compare_operations(standard_steps, actual_steps)
+    report = compare_operations(standard_steps, actual_steps, issue_type)
     print(json.dumps(report, ensure_ascii=False, indent=2))
-
-    # Ensure the file is saved in the root directory
-    # root_dir = os.path.dirname(os.path.abspath(__file__))
-    # output_path = os.path.join(root_dir, "report.txt")
-
-    # Write the JSON report to the file
-    # with open(output_path, "w", encoding="utf-8") as f:
-    #     json.dump(report, f, ensure_ascii=False, indent=2)
-
-    # print(f"Report saved to {output_path}")
 
 
 if __name__ == "__main__":
