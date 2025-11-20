@@ -14,9 +14,8 @@ pip install -r requirements.txt
 
 To pack:
 ```
-pyinstaller --onedir --paths=. --name CIP_tool main.py
+pyinstaller --onedir --paths=. --name CIP_tool --add-data "llm/prompts;llm/prompts" main.py
 ```
-
 To run:
 ```
 CIP_tool.exe "<CIP item detail page link>"
