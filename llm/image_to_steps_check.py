@@ -7,9 +7,9 @@ from utils.file_utils import load_prompt
 def check_steps_with_image_matching(steps_json, issue_type):
 
     PROMPT_FILES = {
-        IssueEnum.FEATURE_NOT_FOUND.value: "./llm/prompts/image_feature_not_found_prompt.txt",
-        IssueEnum.NO_ISSUE_FOUND.value: "./llm/prompts/image_no_issue_found_prompt.txt",
-        IssueEnum.ISSUE_FOUND.value: "./llm/prompts/image_issue_found_prompt.txt",
+        IssueEnum.FEATURE_NOT_FOUND.value: "llm/prompts/image_feature_not_found_prompt.txt",
+        IssueEnum.NO_ISSUE_FOUND.value: "llm/prompts/image_no_issue_found_prompt.txt",
+        IssueEnum.ISSUE_FOUND.value: "llm/prompts/image_issue_found_prompt.txt",
     }
 
     # Load the system prompt based on issue type
