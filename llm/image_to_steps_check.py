@@ -4,7 +4,7 @@ from enums.issue_enum import IssueEnum
 from utils.file_utils import load_prompt
 
 
-def check_steps_with_image_matching(steps_json, issue_type):
+def check_steps_with_image_matching(steps_json, issue_type, judge_comment):
 
     PROMPT_FILES = {
         IssueEnum.FEATURE_NOT_FOUND.value: "llm/prompts/image_feature_not_found_prompt.txt",
@@ -14,6 +14,9 @@ def check_steps_with_image_matching(steps_json, issue_type):
 
     # Load the system prompt based on issue type
     system_prompt = load_prompt(PROMPT_FILES.get(issue_type))
+
+    if issue_type in [IssueEnum.ISSUE_FOUND.value, IssueEnum.FEATURE_NOT_FOUND.value]:
+        system_prompt = system_prompt.replace("{judge_comment}", judge_comment)
 
     # Prepare structured user content with 'type' fields
     user_content_structured = []
@@ -74,10 +77,10 @@ def check_steps_with_image_matching(steps_json, issue_type):
     return {"step_results": parsed.get("step_results", []), "final_summary": final}
 
 
-def compare_operations(standard_steps, actual_steps, issue_type):
+def compare_operations(standard_steps, actual_steps, issue_type, judge_comment):
 
     steps_json = build_steps_json(standard_steps, actual_steps)
-    result = check_steps_with_image_matching(steps_json, issue_type)
+    result = check_steps_with_image_matching(steps_json, issue_type, judge_comment)
     return result
 
 

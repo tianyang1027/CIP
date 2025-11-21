@@ -38,7 +38,7 @@ def main(page_url: str):
     # Extract standard steps and actual steps from the page
     standard_steps = extract_steps_from_left_pane(driver)
     print(f"Standard steps extracted: {len(standard_steps)}")
-    actual_steps = extract_steps_from_right_pane(driver)
+    judge_comment,  actual_steps = extract_steps_from_right_pane(driver)
     print(f"Actual steps extracted: {len(actual_steps)}")
 
     # Validate extracted steps
@@ -64,7 +64,7 @@ def main(page_url: str):
     print("Comparing steps...")
 
     # Compare the steps and print the report in JSON format
-    report = compare_operations(standard_steps, actual_steps, issue_type)
+    report = compare_operations(standard_steps, actual_steps, issue_type,judge_comment)
     print(json.dumps(report, ensure_ascii=False, indent=2))
 
 
