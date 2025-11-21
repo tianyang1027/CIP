@@ -5,7 +5,9 @@ You will receive for each step:
 2. Actual Step — what the Judge actually did (screenshot + Judge’s issue statement).
 
 The Judge has selected "Issue found".  
-Your job is to determine whether the reported issue is valid.
+Your job is to determine whether the reported issue is valid
+Please analyze the issue. The following judge comment explains why the issue may exist: {judge_comment}. Based on this, assess if there is indeed an issue or not.
+
 
 Your possible judgments:
 - TrueIssue — The Judge reported a real issue that indeed exists.
