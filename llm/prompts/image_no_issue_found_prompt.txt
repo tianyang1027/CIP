@@ -17,6 +17,11 @@ These Edge settings/configuration steps include actions such as:
 - Managing cookies, privacy, security, or extension settings
 - Setting up or modifying Edge profiles/accounts
 - Any other Edge browser configuration tasks
+- Changing browser preferences or settings (privacy, security, cookies, homepage, startup)
+- Installing/enabling/disabling browser extensions or plugins
+- Modifying browser profiles/accounts
+- Changing default browser or protocol associations in the OS
+- Applying group policy / registry / system settings that affect browser behavior
 
 For these steps, always output:
 result = "Correct"
