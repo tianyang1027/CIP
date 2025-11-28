@@ -5,32 +5,60 @@ Please analyze the issue. The following judge comment explains why the feature n
 
 
 ==================== FEATURE NOT FOUND — CORE RULES ====================
-When the Judge selects "Feature not found", apply the following logic:
+A Judge's decision of "Feature not found" must be evaluated based on the following rules:
 
-Correct:
-1. If the standard test case explicitly states:
-   - "If the feature does not appear, select Feature not found"
-   and the Judge correctly selected it, then judgement is Correct.
+------------------------------
+✔ Correct (Case-Level Correct)
+------------------------------
+The Judge’s selection of “Feature not found” is considered Correct when ANY of the following are true:
 
-2. Even if the standard steps do NOT explicitly instruct choosing "Feature not found":
-   If the Judge genuinely cannot find the feature in the actual screenshots,
-   then selecting "Feature not found" is also Correct.
-   (Note: In this situation, if the Judge had instead selected "Issue found," that would ALSO be considered Correct, because the test case lacks explicit instruction and the feature truly did not appear.)
+1. **Explicit instruction in the test case**
+   The standard test case explicitly states:
+   - “If the feature does not appear, select Feature not found”
+   AND the Judge followed the instruction.
+   → Correct
 
-Incorrect:
-- The standard steps do NOT instruct selecting "Feature not found",
-  AND the feature clearly DOES appear in the screenshots,
-  yet the Judge still chose "Feature not found".
-  → This is an Incorrect judgement.
+2. **Feature truly does not appear (even if test case DOES NOT mention Feature not found)**
+   - The feature genuinely does NOT appear in the screenshots.
+   - The Judge could not find the feature.
+   → Selecting “Feature not found” is Correct.
+   NOTE:
+   In such cases, if the Judge had selected "Issue found" instead,
+   that would ALSO be considered Correct, because the test case gives no explicit rule.
 
-Spam:
-- The screenshots are meaningless, repetitive, empty, blank, or unrelated to the actions.
+3. **Feature is inherently randomized**
+   Examples:
+   - Search result modules (e.g., QnA block may or may not appear)
+   - Dynamic feed sections
+   If the screenshots confirm it did not appear, Judge’s decision is Correct.
 
-NeedDiscussion:
-- The screenshots are ambiguous, incomplete, corrupted, or unclear,
-  and it is impossible to determine whether the feature appears.
-- If the task type does not support “NeedDiscussion”, treat as Correct
-  and explain in final reason.
+--------------------------------
+✖ Incorrect (Case-Level Incorrect)
+--------------------------------
+The Judge’s selection is Incorrect when ALL of the following are true:
+
+1. The standard test case does NOT instruct selecting “Feature not found”.
+2. The feature clearly DOES appear in the screenshots.
+3. The Judge still selected “Feature not found”.
+
+→ This is a misjudgment and must be marked Incorrect.
+
+------------------------------
+⚠ Spam
+------------------------------
+Mark as Spam when:
+- Screenshots are meaningless, blank, repetitive, irrelevant,
+- Or clearly unrelated to the expected operations.
+
+------------------------------
+⚠ NeedDiscussion
+------------------------------
+Choose NeedDiscussion if:
+- Screenshots are incomplete, corrupted, too ambiguous,
+- Or it is genuinely impossible to determine whether the feature appears.
+
+If the task type does not support “NeedDiscussion”:
+→ Treat as Correct and explain why in the final reason.
 
 ==================== EDGE BROWSER SETTINGS OVERRIDE RULE ====================
 If the standard step describes Microsoft Edge browser settings, configuration, or setup operations,
@@ -51,33 +79,36 @@ result = "Correct"
 reason = "This is an Edge browser setting step, automatically considered correct as instructed."
 
 ==================== NORMAL STEP JUDGMENT RULES (NON-FEATURE-NOT-FOUND STEPS) ====================
+(These apply only to step-level correctness, not the Judge’s final choice)
+
 Correct:
 - The screenshot clearly shows the correct execution of the described step.
 
 Incorrect:
-- The screenshot does not match the required action.
-- The Judge skipped steps or failed to report an issue.
+- Action does not match the standard step.
+- Judge skipped an action.
+- An issue exists but Judge did not report it.
 
 Spam:
-- The screenshot is irrelevant or meaningless.
+- Unrelated or meaningless screenshot.
 
 NeedDiscussion:
-- The screenshot is unclear, ambiguous, or incomplete.
+- Screenshot too unclear to judge.
 
 ==================== FINAL SUMMARY RULES ====================
-After evaluating all steps:
+After evaluating all steps and applying the Feature-Not-Found logic:
 
 If any step is Spam →
-    final_result = "Spam"
+    "final_result": "Spam"
 
 Else if any step is NeedDiscussion →
-    final_result = "NeedDiscussion"
+    "final_result": "NeedDiscussion"
 
 Else if any non-Edge-setting step is Incorrect →
-    final_result = "Incorrect"
+    "final_result": "Incorrect"
 
 Else →
-    final_result = "Correct"
+    "final_result": "Correct"
 
 ==================== OUTPUT FORMAT (STRICT) ====================
 Respond ONLY with JSON in this exact format:
