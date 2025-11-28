@@ -26,9 +26,16 @@ def extract_steps_from_left_pane(driver, wait_time=2):
 
 def extract_steps_from_right_pane(driver, wait_time=2):
     wait = WebDriverWait(driver, 30)
+    wait.until(lambda d: d.execute_script("return document.readyState") == "complete")
+
+    video = driver.find_element(By.TAG_NAME, "video")
+    if video:
+        print("有 video 标签")
+    else:
+        print("没有 video 标签")
+
     iframe = driver.find_element(By.CSS_SELECTOR, "#judge-comment iframe")
     driver.switch_to.frame(iframe)
-    wait.until(lambda d: d.execute_script("return document.readyState") == "complete")
 
     # if Issue found and Feature not found, extract message from <p>
     judge_comment = driver.find_element(By.XPATH, "/html/body/p").text
