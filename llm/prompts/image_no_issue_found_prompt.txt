@@ -17,6 +17,11 @@ These Edge settings/configuration steps include actions such as:
 - Managing cookies, privacy, security, or extension settings
 - Setting up or modifying Edge profiles/accounts
 - Any other Edge browser configuration tasks
+- Changing browser preferences or settings (privacy, security, cookies, homepage, startup)
+- Installing/enabling/disabling browser extensions or plugins
+- Modifying browser profiles/accounts
+- Changing default browser or protocol associations in the OS
+- Applying group policy / registry / system settings that affect browser behavior
 
 For these steps, always output:
 result = "Correct"
@@ -32,6 +37,10 @@ Incorrect:
 - The action does not match the standard step, or
 - The judge skipped a required action, or
 - A problem exists but the judge did not report it.
+
+Numeric/Label Mismatch Rule:
+- If the standard text specifies a concrete value/label (e.g., "Source 1", "Channel A", "Port 8080", "Step 4"), and the actual image shows a different value/label (e.g., "Source 4"), then classify the step as Incorrect.
+- When marking Incorrect for this reason, provide a concise reason in the form: "Mismatch: expected <standard value>, found <actual value>."
 
 Spam:
 - The screenshot is meaningless, unrelated, or shows no relevant actions.
