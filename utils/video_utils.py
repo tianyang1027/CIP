@@ -1,4 +1,5 @@
 import cv2
+import base64
 import numpy as np
 import requests
 
@@ -31,6 +32,7 @@ def split_video_to_frames(video_path):
     return frames
 
 def check_video_url(url):
+    
     """
     Checks if a video URL can be opened and is not a dead link.
 
@@ -58,3 +60,9 @@ def check_video_url(url):
     # Successfully opened the video
     cap.release()
     return True
+
+# 3. Convert frame to base64 
+# =========================================
+def frame_to_base64(frame):
+    _, buffer = cv2.imencode(".jpg", frame)
+    return base64.b64encode(buffer).decode()

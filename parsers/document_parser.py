@@ -35,7 +35,7 @@ def extract_steps_from_right_pane(driver, wait_time=2):
         print("没有 video 标签")
 
     iframe = driver.find_element(By.CSS_SELECTOR, "#judge-comment iframe")
-    driver.switch_to.frame(iframe)
+    driver.switch_to.frame(ee)
 
     # if Issue found and Feature not found, extract message from <p>
     judge_comment = driver.find_element(By.XPATH, "/html/body/p").text
