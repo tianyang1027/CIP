@@ -52,7 +52,7 @@ NeedDiscussion:
 ==================== SPECIAL RULE ====================
 - If the standard steps requires opening some web pages, but only one web browser window is opened, return Incorrect and reason:'Did not open multiple web pages.'
 - If the standard steps requires opening a new tab and search several queries. but there is only one screenshot for the actual step and only one keyword in the search box, return "Incorrect" and provide the reason: "The screenshot shows that only one keyword was searched.
-- If the standard step requires hovering over some items but the actual image does not allow you to determine whether the actual operation included a mouse hover, you should choose “NeedDiscussion”, and the reason you return should be: “From the screenshot, it’s impossible to determine whether the mouse is hovering.”
+- If the standard steps requires hovering over some items but the actual image does not allow you to determine whether the actual operation included a mouse hover, you should choose “NeedDiscussion”, and the reason you return should be: “From the screenshot, it’s impossible to determine whether the mouse is hovering.”
 
 ==================== FINAL SUMMARY RULES ====================
 After evaluating all steps:
