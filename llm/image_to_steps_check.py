@@ -50,15 +50,21 @@ def check_steps_with_image_matching(steps_json, issue_type, judge_comment):
                 "text": "No Standard Image Provided."
             })
 
-        # Actual image (always provided)
-        user_content_structured.append({
-            "type": "text",
-            "text": "Actual Image:"
-        })
-        user_content_structured.append({
-            "type": "image_url",
-            "image_url": {"url": step["actual_image_url"]}
-        })
+        # Actual image (may not exist)
+        if step.get("actual_image_url"):
+            user_content_structured.append({
+                "type": "text",
+                "text": "Actual Image:"
+            })
+            user_content_structured.append({
+                "type": "image_url",
+                "image_url": {"url": step["actual_image_url"]}
+            })
+        else:
+            user_content_structured.append({
+                "type": "text",
+                "text": "No Actual Image Provided."
+            })
 
 
     # Call GPT model
@@ -67,7 +73,7 @@ def check_steps_with_image_matching(steps_json, issue_type, judge_comment):
             {"role": "system", "content": system_prompt},
             {"role": "user", "content": user_content_structured},
         ],
-        model="gpt-4.1",
+        model="gpt-5.1",
         max_tokens=2000,
         temperature=0.0,
         top_p=1.0,
