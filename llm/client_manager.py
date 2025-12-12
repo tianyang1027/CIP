@@ -65,7 +65,7 @@ class ClientManager:
             response = self.client.chat.completions.create(
                 model=model,
                 messages=messages,
-                max_tokens=max_tokens,
+                max_completion_tokens=max_tokens,
                 temperature=temperature,
                 top_p=top_p,
                 timeout=timeout,
