@@ -70,7 +70,7 @@ You must output JSON strictly in this format:
 {
   "final_summary": {
     "final_result": "Correct" | "Incorrect" | "Spam" | "NeedDiscussion",
-    "reason": "step number:<final reason>"
+    "reason": "step number:<final reason>" // only for "Incorrect" | "Spam" | "NeedDiscussion"
   }
 }
  
