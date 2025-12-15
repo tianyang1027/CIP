@@ -52,7 +52,9 @@ NeedDiscussion:
 ==================== SPECIAL RULE ====================
 - If the standard steps requires opening some web pages, but only one web browser window is opened, return Incorrect and reason:'Did not open multiple web pages.'
 - If the standard steps requires opening a new tab and search several queries. but there is only one screenshot for the actual step and only one keyword in the search box, return "Incorrect" and provide the reason: "The screenshot shows that only one keyword was searched.
-- If the standard steps requires hovering over some items but the actual image does not allow you to determine whether the actual operation included a mouse hover, you should choose “NeedDiscussion”, and the reason you return should be: “From the screenshot, it’s impossible to determine whether the mouse is hovering.”
+- If the standard steps requires Install APP by running *.exe, and the actual screenshot is of the software's operating interface, It means the *.exe file has already been installed, so it needs to return to the correct installation state.
+- If an exe needs to be installed at a certain step, then the subsequent steps are all based on that software.
+
 
 ==================== FINAL SUMMARY RULES ====================
 After evaluating all steps:
@@ -66,25 +68,17 @@ Else → final_result = "Correct"
 You must output JSON strictly in this format:
 
 {
-  "step_results": [
-    {
-      "step_number": 1,
-      "result": "Correct" | "Incorrect" | "Spam" | "NeedDiscussion",
-      "reason": "<reason>"
-    },
-    ...
-  ],
   "final_summary": {
     "final_result": "Correct" | "Incorrect" | "Spam" | "NeedDiscussion",
-    "reason": "<final reason>"
+    "reason": "step number:<final reason>"
   }
 }
+ 
 
 Rules:
-1. Every step must include both a result and a reason.
-2. Apply the Edge override rule without exception.
-3. Apply the “No issue found” case logic when applicable.
-4. If any step is found incorrect, the final result must be "Incorrect" and the final reason must be the reason for the first incorrect step.
-5. Output only JSON. No additional text or commentary.
-6. JSON structure must be exactly as specified.
-7. For some steps, your judgment needs to be made by considering the surrounding steps and overall context, and you should provide a reasonable answer along with the explanation.
+1. Apply the Edge override rule without exception.
+2. If any step result is "Incorrect" or "Spam" or "NeedDiscussion", the final result must be "Incorrect" or "Spam" or "NeedDiscussion" and the final reason must be the reason for the first "Incorrect" or "Spam" or "NeedDiscussion" step.
+3. Output only JSON. No additional text or commentary.
+4. JSON structure must be exactly as specified.
+5. You need to make a comprehensive judgment based on the actual screenshots of the current step, as well as the previous and subsequent steps, and provide a reasonable judgment result.
+6. There is no need to return the results of all steps, only return the judgment result of the first step that is incorrect, or spam, or need discussion, along with the judgment results of the steps before this one.

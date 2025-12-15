@@ -91,13 +91,7 @@ def check_steps_with_image_matching(steps_json, issue_type, judge_comment):
         except Exception:
             print("Warning: model output is not valid JSON.")
             print(content)
-            return {
-                "step_results": [],
-                "final_summary": {
-                    "final_result": "NeedDiscussion",
-                    "reason": "Model output cannot be parsed, manual review required",
-                },
-            }
+            return None
 
     # Validate final_summary
     final = parsed.get("final_summary", {})
@@ -107,7 +101,7 @@ def check_steps_with_image_matching(steps_json, issue_type, judge_comment):
         final_reason = "Model returned unknown final_result, manual review required"
         final = {"final_result": final_result, "reason": final_reason}
 
-    return {"step_results": parsed.get("step_results", []), "final_summary": final}
+    return {"final_summary": final}
 
 
 def compare_operations(standard_steps, actual_steps, issue_type, judge_comment):
