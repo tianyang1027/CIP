@@ -7,7 +7,7 @@
             "module": "main",
             "console": "integratedTerminal",
             "args": [
-                "https://crowdintelligence.azurewebsites.net/triaging/v1/permalink?metric=GenericScenario&auditid=41809&build=14121100000004&hitid=384326611&judgeid=3166125"
+                "https://crowdintelligence.azurewebsites.net/triaging/v1/permalink?metric=GenericScenario&auditid=43579&build=25103003455370&hitid=396611764&judgeid=3007784"
             ]
         }
     ]
