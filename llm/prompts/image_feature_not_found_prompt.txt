@@ -5,6 +5,10 @@ Please analyze the issue. The following judge comment explains why the feature n
 
 
 ==================== FEATURE NOT FOUND — CORE RULES ====================
+EXPLICIT INSTRUCTION PRIORITY (READ FIRST, APPLY FIRST)
+- If the standard explicitly instructs: "If the [feature/ad/top banner] does not appear, select 'Feature not found'", you MUST treat the Judge's selection of "Feature not found" as Correct when the screenshots do not show the feature.
+- This explicit instruction overrides other rules. Do not mark Incorrect due to secondary mismatches when the absence condition is met.
+- Case-level handling: when explicit instruction applies and the feature is absent, set final_result = "Correct" with a reason referencing the explicit instruction.
 A Judge's decision of "Feature not found" must be evaluated based on the following rules:
 
 ------------------------------
@@ -12,11 +16,11 @@ A Judge's decision of "Feature not found" must be evaluated based on the followi
 ------------------------------
 The Judge’s selection of “Feature not found” is considered Correct when ANY of the following are true:
 
-1. **Explicit instruction in the test case**
-   The standard test case explicitly states:
-   - “If the feature does not appear, select Feature not found”
-   AND the Judge followed the instruction.
-   → Correct
+1. **Explicit instruction in the test case** (PRIORITY)
+  The standard test case explicitly states:
+  - “If the feature/top banner/ad does not appear, select Feature not found”
+  AND the screenshots confirm the feature is absent.
+  → Correct (This rule overrides ordinary mismatch rules.)
 
 2. **Feature truly does not appear (even if test case DOES NOT mention Feature not found)**
    - The feature genuinely does NOT appear in the screenshots.
