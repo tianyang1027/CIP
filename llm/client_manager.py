@@ -19,7 +19,11 @@ class ClientManager:
 
         openai_key = os.getenv("OPENAI_APIKEY")
 
-        if azure_api_key and azure_api_endpoint and azure_api_version:
+        if openai_key:
+            self.mode = "openai"
+            self.client = OpenAI(api_key=openai_key)
+            logging.info("Using OpenAI Official Client.")
+        elif azure_api_key and azure_api_endpoint and azure_api_version:
             self.mode = "azure"
             self.client = AzureOpenAI(
                 api_key=azure_api_key,
@@ -27,10 +31,6 @@ class ClientManager:
                 api_version=azure_api_version,
             )
             logging.info("Using Azure OpenAI Client.")
-        elif openai_key:
-            self.mode = "openai"
-            self.client = OpenAI(api_key=openai_key)
-            logging.info("Using OpenAI Official Client.")
         else:
             raise ValueError(
                 "No valid OpenAI credentials found in environment variables."
@@ -65,7 +65,7 @@ class ClientManager:
             response = self.client.chat.completions.create(
                 model=model,
                 messages=messages,
-                max_tokens=max_tokens,
+                max_completion_tokens=max_tokens,
                 temperature=temperature,
                 top_p=top_p,
                 timeout=timeout,

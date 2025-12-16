@@ -7,10 +7,7 @@
             "module": "main",
             "console": "integratedTerminal",
             "args": [
-                
-                //"https://crowdintelligence.azurewebsites.net/triaging/v1/permalink?metric=GenericScenario&auditid=42162&build=25101903328466&hitid=396341793&judgeid=3077975"  //No issue found
-                 "https://crowdintelligence.azurewebsites.net/triaging/v1/permalink?metric=GenericScenario&auditid=41722&build=25100503323261&hitid=385734864&judgeid=2992258"  //issue found
-                //"https://crowdintelligence.azurewebsites.net/triaging/v1/permalink?metric=GenericScenario&auditid=42004&build=14121100000007&hitid=475544187&judgeid=2456078" //feature not   found
+                "https://crowdintelligence.azurewebsites.net/triaging/v1/permalink?metric=GenericScenario&auditid=43579&build=25103003455370&hitid=396611764&judgeid=3007784"
             ]
         }
     ]
