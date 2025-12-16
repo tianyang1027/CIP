@@ -50,9 +50,57 @@ NeedDiscussion:
 - The screenshot is ambiguous, unclear, or insufficient to determine correctness.
 
 ==================== SPECIAL RULE ====================
-- If the standard steps requires opening some web pages, but only one web browser window is opened, return Incorrect and reason:'Did not open multiple web pages.'
-- If the standard steps requires opening a new tab and search several queries. but there is only one screenshot for the actual step and only one keyword in the search box, return "Incorrect" and provide the reason: "The screenshot shows that only one keyword was searched.
-- If the standard steps requires Install APP by running *.exe, and the actual screenshot is of the software's operating interface, It means the *.exe file has already been installed, so it needs to return to the correct installation state.
+
+1. Scrolling and Page Position Verification:
+- If standard step requires checking/verifying content "at the top" or "in the middle" of a page, but actual screenshot shows content at the bottom (e.g., scrollbar at bottom position), return "Incorrect" with reason: "Required content should be at the top/middle, but judge scrolled to the bottom without checking the correct position."
+- If standard step requires verifying content existence across entire page, judge MUST scroll through the full page. If actual screenshots show only partial page view without scrolling, return "Incorrect" with reason: "Did not scroll through entire page to verify content existence."
+- When standard step requires "scroll to bottom" or "scroll down", check scrollbar position in actual screenshot. If scrollbar not at bottom, return "Incorrect" with reason: "Did not scroll to the bottom as required."
+- If standard step shows position indicators (arrows, circles, highlights) marking specific page locations, actual screenshot must show same relative position. Mismatch indicates scrolling error.
+
+2. UI Element State Verification:
+- Distinguish between "element was clicked" vs "element reached correct final state":
+  * If standard step requires setting a toggle/switch to ON, actual screenshot must show toggle in ON position (not just clicking action).
+  * If standard step requires selecting a specific option from dropdown/radio buttons, actual screenshot must show that option selected (not just dropdown opened).
+  * If standard step requires checking a checkbox, actual screenshot must show checkbox checked (not just clicking action).
+- If actual screenshot shows element was interacted with but did not reach required final state, return "Incorrect" with reason: "Element was clicked but did not reach the required state (e.g., toggle still OFF when should be ON)."
+
+3. Marked/Highlighted Element Verification:
+- If standard image contains visual markers (red arrows, red circles, yellow highlights, boxes) indicating specific UI elements to interact with:
+  * Actual screenshot MUST show interaction with the SAME element that is marked in standard image.
+  * Compare element position, label, icon in both images to verify correct element.
+  * If actual screenshot shows interaction with different element, return "Incorrect" with reason: "Interacted with wrong element. Standard image marks [element A], but actual screenshot shows interaction with [element B]."
+
+4. Content Existence Verification:
+- When standard step requires verifying "specific content exists" or "contains specific text/element", judge must provide evidence of finding it:
+  * If content exists and judge reports it → "Correct"
+  * If content does NOT exist and judge correctly reports missing → "Correct" (judge did their job correctly by reporting the issue)
+  * If content exists but judge says "not found" → "Incorrect" with reason: "Content actually exists in the screenshot but judge failed to identify it."
+  * If content does NOT exist but judge says "found" → "Incorrect" with reason: "Judge claimed content exists but it is not visible in the screenshot."
+
+5. Issue Reporting Logic (CRITICAL):
+- **If judge correctly identifies a REAL issue/problem and reports it as required by standard steps**, this is CORRECT behavior, return "Correct" with reason: "Judge correctly identified and reported the issue as required."
+- Only mark "Incorrect" if:
+  * Judge reports an issue that doesn't actually exist (false positive)
+  * Judge fails to report an issue that clearly exists (false negative)
+  * Judge reports the wrong type of issue
+- Examples of CORRECT judge behavior:
+  * Standard step: "Check if weather answer is shown correctly", weather answer missing → Judge reports "weather answer not found" → "Correct"
+  * Standard step: "Verify element X is clickable", element X is not clickable → Judge reports "element X cannot be clicked" → "Correct"
+  
+6. Browser Mode Verification:
+- If standard step requires specific browser mode (e.g., "open in InPrivate/Incognito mode"), verify mode indicators in actual screenshot:
+  * InPrivate/Incognito mode: Look for mode icon, window title indicator, or mode badge
+  * Normal mode: Regular browser window appearance
+- If required mode does not match actual screenshot, return "Incorrect" with reason: "Required [InPrivate/Incognito] mode but screenshot shows normal browser window."
+
+7. Multiple Web Pages Rule:
+- If standard steps require opening multiple web pages, but only one browser window is opened, return "Incorrect" with reason: "Did not open multiple web pages."
+
+8. Search Query Rule:
+- If standard steps require opening a new tab and searching several queries, but there is only one screenshot for the actual step and only one keyword in the search box, return "Incorrect" with reason: "The screenshot shows that only one keyword was searched."
+
+9. Software Installation Rule:
+- If standard steps require installing APP by running *.exe, and actual screenshot shows the software's operating interface, it means the *.exe file has already been installed, so return "Correct" for installation state.
 - If an exe needs to be installed at a certain step, then the subsequent steps are all based on that software.
 
 
