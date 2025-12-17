@@ -61,7 +61,12 @@ NeedDiscussion:
    * Multi-action steps often show their complete result several steps later
    * Example: Step 1 "Open Bing.com and search for X" - the final search result page (showing Bing URL and search results) may appear in Step 2, 3, 4, or later
    * If ANY subsequent step shows the final state that proves ALL actions completed → mark Correct
-- Sleep/Lock/Wake actions (e.g., "Win+L"/"Windows+L" lock then wake/unlock): Static screenshots cannot prove the temporal transition from locked/sleep to unlocked/awake. If没有锁屏画面或无法看到锁屏→解锁→桌面的连续证据，一律NeedDiscussion。包含“将设备置于睡眠状态”“锁定屏幕”“Win+L”“再次唤醒设备”“解锁”均按此规则处理，除非有清晰的锁屏画面和解锁后的同一会话桌面连续性。
+- Sleep/Lock/Wake actions (e.g., "Win+L"/"Windows+L" lock then wake/unlock): Static screenshots cannot prove the temporal transition from locked/sleep to unlocked/awake. If there is no lock screen image or cannot see the continuous evidence of lock screen → unlock → desktop, always return NeedDiscussion. This rule applies to all keywords including "put device to sleep", "lock screen", "Win+L", "wake device again", "unlock", "screen off", "shortcut key screen off", "turn off screen", "turn on screen", "power button screen off", "power button wake", unless there is clear continuity of lock screen/screen-off black screen and unlocked desktop in the same session.
+- 🚨 Screen Off/Lock + Wake Sequences: If standard step requires using shortcut keys to turn off screen, lock device, or put to sleep, THEN wake/unlock, this is inherently TWO distinct operations. You MUST check for:
+  * Evidence of screen-off/lock state (lock screen image, black screen, sleep indicator)
+  * Evidence of wake/unlock state (desktop visible after wake)
+  * If EITHER screenshot is missing → MUST return NeedDiscussion with reason: "Step requires two operations (screen-off/lock + wake), but screenshots do not show both states. Cannot verify complete sequence."
+  * Example keywords triggering this rule: "shortcut key screen off", "Win+L lock screen", "sleep then wake", "power button screen off then wake", "lock and unlock", "turn off screen then turn on"
  - VERIFICATION LOGIC FOR MULTI-ACTION:
    * Scan through Step N+1, N+2, N+3, ... N+k (all subsequent steps)
    * Look for evidence that the final state shows ALL required actions were completed
@@ -81,9 +86,15 @@ EXAMPLE: "Open chrome and browse 5 different websites and add them as bookmark"
 
 ==================== SPECIAL RULE ====================
 
-0. Sleep/Lock/Wake Verification (Win+L / lock screen / sleep then wake):
-- If the standard step asks to lock the screen, put the device to sleep, use Win+L/Windows+L, then wake/unlock/return to desktop, and there is no clear lock-screen image followed by the unlocked desktop in the same session (continuity evidence), always return NeedDiscussion. Static screenshots cannot prove the lock → wake/unlock sequence.
-- Even if the desktop is visible but the lock screen is missing, mark NeedDiscussion; if only the lock screen is shown without the unlocked desktop, also mark NeedDiscussion.
+0. Sleep/Lock/Wake/Screen-Off Verification (Win+L / lock screen / sleep then wake / screen-off + wake):
+- If the standard step asks to lock the screen, turn off screen, put the device to sleep, use Win+L/Windows+L/power button/shortcut keys, then wake/unlock/return to desktop, and there is no clear lock-screen image OR screen-off image (black screen) followed by the unlocked desktop in the same session (continuity evidence), always return NeedDiscussion. Static screenshots cannot prove the lock/screen-off → wake/unlock sequence.
+- Even if the desktop is visible but the lock screen/screen-off state is missing, mark NeedDiscussion; if only the lock screen/screen-off is shown without the unlocked desktop, also mark NeedDiscussion.
+- 🚨 CRITICAL: Screen-off + Wake operations are TWO separate actions. Keywords include: "shortcut key screen off", "screen off then wake", "power button screen off", "turn off screen then turn on", "screen off wake". If screenshots don't show BOTH the screen-off state AND the wake state, return NeedDiscussion with reason: "Step requires screen-off and wake (two operations), but only shows wake state without screen-off evidence. Cannot verify complete sequence."
+- Examples requiring BOTH screenshots:
+  * "Press shortcut key to turn off screen, then wake device" → need screen-off (black/lock screen) + desktop after wake
+  * "Win+L to lock, then unlock" → need lock screen + unlocked desktop
+  * "Power button screen off then power button wake" → need black screen + wake screen
+- If missing either state → NeedDiscussion (not Correct, not Incorrect)
 
 1. Scrolling and Page Position Verification:
 - If standard step requires checking/verifying content "at the top" or "in the middle" of a page, but actual screenshot shows content at the bottom (e.g., scrollbar at bottom position), return "Incorrect" with reason: "Required content should be at the top/middle, but judge scrolled to the bottom without checking the correct position."
@@ -137,6 +148,24 @@ EXAMPLE: "Open chrome and browse 5 different websites and add them as bookmark"
 - If standard steps require installing APP by running *.exe, and actual screenshot shows the software's operating interface, it means the *.exe file has already been installed, so return "Correct" for installation state.
 - If an exe needs to be installed at a certain step, then the subsequent steps are all based on that software.
 - If the standard steps requires check the value of activation source in the data migration dialog, you need to check if the value of the activation source in the actual step image matches the target value which in standard text.
+
+10. Keyboard Shortcut + Alternative Methods (OR operations):
+- 🚨 CRITICAL: If standard step contains "press key X OR click/hover element Y" (multiple alternative methods), and the screenshot cannot prove WHICH method was used, return NeedDiscussion.
+- Keywords triggering this rule: "OR", "or press", "or click", "or hover", "press ... key or ...", "use shortcut or click"
+- Examples:
+  * "Press Windows+W key OR click the weather icon" → Cannot determine from static screenshot which method was used
+  * "Press Ctrl+T or click the plus button to open new tab" → Cannot verify which action was performed
+  * "Open dashboard by pressing Windows+W or clicking weather widget" → Cannot verify the actual action taken
+- Reason for NeedDiscussion: "Step offers multiple alternative methods (e.g., keyboard shortcut or click/hover), but screenshot cannot verify which method was actually used."
+- EXCEPTION: If the step clearly shows the outcome of ONLY ONE method is possible from the screenshot (e.g., dashboard opened with specific indicator proving shortcut vs click), then Correct is acceptable.
+- If ambiguous whether the intended method was used → NeedDiscussion (not Correct, not Incorrect).
+
+11. Keyboard Shortcut Verification (Win+W, Win+L, Ctrl+T, etc.):
+- Static screenshots CANNOT prove that a specific keyboard shortcut was pressed. Even if the result appears in the screenshot, the method cannot be verified.
+- If standard step explicitly requires a keyboard shortcut (e.g., "Press Windows+W", "Use Ctrl+F"), but the screenshot only shows the final state without evidence of the shortcut execution, return NeedDiscussion.
+- Exception: If subsequent steps CLEARLY show outcomes only achievable by that specific shortcut (proving the shortcut was used), then Correct is acceptable.
+- Keywords: "press", "shortcut", "keyboard", "Win+", "Ctrl+", "Alt+", "Shift+"
+- Reason for NeedDiscussion: "Keyboard shortcut action cannot be verified from static screenshot alone."
 
 
 ==================== FINAL SUMMARY RULES ====================
