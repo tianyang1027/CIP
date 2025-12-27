@@ -15,7 +15,7 @@ from llm.image_to_steps_check import compare_operations
 from concurrent.futures import ThreadPoolExecutor
 
 
-# 修改main函数，返回final_result和reason
+# Modify the main function to return final_result and reason
 def process_page(page_url: str):
     # Initialize the Edge WebDriver
     driver = webdriver.Edge()
@@ -43,7 +43,7 @@ def process_page(page_url: str):
     # Extract standard steps and actual steps from the page
     standard_steps = extract_steps_from_left_pane(driver)
     print(f"Standard steps extracted: {len(standard_steps)}")
-    judge_comment,  actual_steps = extract_steps_from_right_pane(driver)
+    judge_comment, actual_steps = extract_steps_from_right_pane(driver)
     print(f"Actual steps extracted: {len(actual_steps)}")
 
     # Validate extracted steps
@@ -79,13 +79,13 @@ def process_page(page_url: str):
 
 
 def process_excel(file_path: str):
-    # 读取Excel文件
+    # Read the Excel file
     df = pd.read_excel(file_path, engine='openpyxl')
 
-    # 提取Link列
+    # Extract the "permalink" column
     links = df["permalink"].tolist()
 
-    # 创建一个线程池来并行处理每个page_url
+    # Create a thread pool to process each page_url in parallel
     results = []
     with ThreadPoolExecutor() as executor:
         futures = {executor.submit(process_page, url.strip()): url for url in links}
@@ -99,12 +99,12 @@ def process_excel(file_path: str):
                 print(f"Error processing {page_url}: {e}")
                 results.append((page_url, "Error", str(e)))
 
-    # 将结果回写到Excel的最后两列
+    # Write the results back to the last two columns in the Excel file
     for index, (url, final_result, reason) in enumerate(results):
         df.at[index, 'final_result'] = final_result
         df.at[index, 'reason'] = reason
 
-    # 保存更新后的Excel文件
+    # Save the updated Excel file
     output_file = file_path.replace(".xlsx", "_updated.xlsx")
     df.to_excel(output_file, index=False)
     print(f"Updated Excel file saved as {output_file}")
@@ -118,25 +118,24 @@ def is_excel_file(file_path):
     return file_path.lower().endswith(('.xlsx', '.xls'))
 
 if __name__ == "__main__":
-    # input can be a page url or an excel file path
+    # Input can be a page URL or an Excel file path
     if len(sys.argv) < 2:
-        print("Please provide a page url or Excel file path.")
+        print("Please provide a page URL or Excel file path.")
         sys.exit(1)
 
     file_path_or_url = sys.argv[1]
 
-
-    # 如果传入的是 URL，则调用 process_page
+    # If the argument is a URL, call process_page
     if is_url(file_path_or_url):
         print(f"Detected page URL: {file_path_or_url}")
         process_page(file_path_or_url)
 
-    # 如果传入的是 Excel 文件路径，则调用 process_excel
+    # If the argument is an Excel file path, call process_excel
     elif is_excel_file(file_path_or_url):
         print(f"Detected Excel file: {file_path_or_url}")
         process_excel(file_path_or_url)
 
-    # 如果既不是 URL，也不是 Excel 文件路径，则给出错误提示
+    # If neither a URL nor an Excel file path, display an error message
     else:
         print("The provided argument is neither a valid URL nor an Excel file path.")
         sys.exit(1)
