@@ -11,7 +11,7 @@ def extract_steps_from_left_pane(driver, wait_time=2):
     lis = driver.find_elements(By.XPATH, "//*[@id='leftPane']//li")
 
     result = []
-    for li in lis:
+    for index, li in enumerate(lis):
         try:
             img_tag = li.find_element(By.TAG_NAME, "img")
             img = img_tag.get_attribute("src")
@@ -19,13 +19,13 @@ def extract_steps_from_left_pane(driver, wait_time=2):
             img = None
 
         text = li.text.strip()
-        result.append({"text": text, "img": img})
+        result.append({"step_number": index + 1, "text": text, "img": img})
 
     return result
 
 
 def extract_steps_from_right_pane(driver, wait_time=2):
-    wait = WebDriverWait(driver, 30)
+    wait = WebDriverWait(driver, 40)
     iframe = driver.find_element(By.CSS_SELECTOR, "#judge-comment iframe")
     driver.switch_to.frame(iframe)
     wait.until(lambda d: d.execute_script("return document.readyState") == "complete")
