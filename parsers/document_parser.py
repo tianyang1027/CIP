@@ -7,7 +7,6 @@ import time
 
 
 def extract_steps_from_left_pane(driver, wait_time=2):
-    time.sleep(wait_time)
     lis = driver.find_elements(By.XPATH, "//*[@id='leftPane']//li")
 
     result = []
@@ -20,7 +19,7 @@ def extract_steps_from_left_pane(driver, wait_time=2):
 
         text = li.text.strip()
         result.append({"step_number": index + 1, "text": text, "img": img})
-
+    driver.quit()
     return result
 
 

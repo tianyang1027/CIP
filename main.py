@@ -3,140 +3,151 @@ import json
 import os
 import re
 import pandas as pd
+
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from parsers.document_parser import (
-    extract_steps_from_left_pane,
-    extract_steps_from_right_pane,
+from selenium.common.exceptions import (
+    TimeoutException,
+    WebDriverException,
+    NoSuchElementException,
 )
-from llm.image_to_steps_check import compare_operations
+
 from concurrent.futures import ThreadPoolExecutor
 
+from parsers.document_parser import extract_steps_from_left_pane
+# from parsers.document_parser import extract_steps_from_right_pane
+# from llm.image_to_steps_check import compare_operations
 
-# Modify the main function to return final_result and reason
+
+# =======================
+# 处理单个页面
+# =======================
 def process_page(page_url: str):
-    # Initialize the Edge WebDriver
-    driver = webdriver.Edge()
-
-    # Open the given page URL
-    driver.get(page_url)
-    driver.maximize_window()
-
-    # Wait for the sign-in button to be clickable
-    sign_in_button = WebDriverWait(driver, 20).until(
-        EC.element_to_be_clickable((By.CLASS_NAME, "signInColor"))
-    )
-    sign_in_button.click()
-
-    # Wait until the left and right panes are loaded
-    WebDriverWait(driver, 20).until(EC.presence_of_element_located((By.ID, "leftPane")))
-
-    # WebDriverWait(driver, 20).until(
-    #     EC.presence_of_element_located((By.CLASS_NAME, "right-pane.col"))
-    # )
-
-    # issue_type = driver.find_element(By.CLASS_NAME, "textColorRed").text
-    # print(f"Issue Type: {issue_type}")
-
-    # Extract standard steps and actual steps from the page
-    standard_steps = extract_steps_from_left_pane(driver)
-    print(f"Standard steps extracted: {len(standard_steps)}")
-    driver.quit()
-    return standard_steps
-    # judge_comment, actual_steps = extract_steps_from_right_pane(driver)
-    # print(f"Actual steps extracted: {len(actual_steps)}")
-
-    # Validate extracted steps
-    # if not standard_steps:
-    #     print("Error: No standard steps found in the left pane.")
-    #     driver.quit()
-    #     return "Error", "No standard steps found."
-
-    # if not actual_steps:
-    #     print("Error: No actual steps found in the right pane.")
-    #     driver.quit()
-    #     return "Error", "No actual steps found."
-
-    # if len(standard_steps) != len(actual_steps):
-    #     print("Error: Mismatched number of steps.")
-    #     driver.quit()
-    #     return "Error", "Mismatched number of steps."
-
-    # print("All checks passed.")
-    # # Close the browser
-    # driver.quit()
-
-    # print("Comparing steps...")
-
-    # # Compare the steps and return the result in JSON format
-    # report = compare_operations(standard_steps, actual_steps, issue_type, judge_comment)
-    # print(json.dumps(report, ensure_ascii=False, indent=2))
-
-    # final_result = report["final_summary"]["final_result"]
-    # reason = report["final_summary"]["reason"]
-
-    # return final_result, reason
+    if page_url is None:
+        print("[SKIP] URL is None")
+        return None
+    page_url = page_url.strip()
+    if not page_url or not page_url.startswith("https://"):
+        print(f"[SKIP] Invalid URL: {page_url}")
+        return None
 
 
+    driver = None
+
+    try:
+        driver = webdriver.Edge()
+        driver.set_page_load_timeout(20)
+
+        # 打开页面（打不开会抛异常）
+        driver.get(page_url)
+        driver.maximize_window()
+
+        # 等待登录按钮
+        sign_in_button = WebDriverWait(driver, 20).until(
+            EC.element_to_be_clickable((By.CLASS_NAME, "signInColor"))
+        )
+        sign_in_button.click()
+
+        # 等待左侧面板加载
+        WebDriverWait(driver, 20).until(
+            EC.presence_of_element_located((By.ID, "leftPane"))
+        )
+
+        # 提取步骤
+        standard_steps = extract_steps_from_left_pane(driver)
+        print(f"[OK] {page_url} -> {len(standard_steps)} steps")
+
+        return standard_steps
+
+    except (TimeoutException, NoSuchElementException) as e:
+        print(f"[SKIP] Page structure error: {page_url} | {e}")
+
+    except WebDriverException as e:
+        print(f"[SKIP] Page load failed: {page_url} | {e}")
+
+    except Exception as e:
+        print(f"[SKIP] Unknown error: {page_url} | {e}")
+
+    finally:
+        if driver:
+            driver.quit()
+
+    # 任何异常统一跳过
+    return None
+
+
+# =======================
+# 处理 Excel
+# =======================
 def process_excel(file_path: str):
-    # Read the Excel file
     df = pd.read_excel(file_path, engine="openpyxl")
 
-    # Extract the "permalink" column
-    links = df["permalink"].tolist()
+    if "permalink" not in df.columns:
+        print("Excel 中未找到 permalink 列")
+        return
 
-    # Create a thread pool to process each page_url in parallel
+    links = df["permalink"].dropna().tolist()
+
     results = []
     with ThreadPoolExecutor(max_workers=10) as executor:
-        futures = {executor.submit(process_page, url.strip()): url for url in links}
+        futures = {executor.submit(process_page, url): url for url in links}
 
         for future in futures:
             page_url = futures[future]
             try:
                 standard_steps = future.result()
-                results.append({"page_url": page_url.strip(), "standard_steps": standard_steps})
+
+                # 关键：None 直接跳过
+                if not standard_steps:
+                    continue
+
+                results.append({
+                    "page_url": page_url.strip(),
+                    "standard_steps": standard_steps
+                })
+
             except Exception as e:
-                print(f"Error processing {page_url}: {e}")
-                results.append({"page_url": page_url.strip(), "error": str(e)})
+                # 理论上不会再进这里
+                print(f"[SKIP] Thread error: {page_url} | {e}")
 
-    # Write the results to a json file
     output_file = os.path.splitext(file_path)[0] + "_results.json"
-
-    with open(output_file, 'w', encoding='utf-8') as f:
+    with open(output_file, "w", encoding="utf-8") as f:
         json.dump(results, f, ensure_ascii=False, indent=2)
+
     print(f"Results saved to {output_file}")
 
 
+# =======================
+# 工具函数
+# =======================
 def is_url(string):
-    url_pattern = re.compile(r"https?://\S+")
-    return url_pattern.match(string)
+    return bool(re.match(r"https?://\S+", str(string)))
 
 
 def is_excel_file(file_path):
     return file_path.lower().endswith((".xlsx", ".xls"))
 
 
+# =======================
+# 主入口
+# =======================
 if __name__ == "__main__":
-    # Input can be a page URL or an Excel file path
     if len(sys.argv) < 2:
         print("Please provide a page URL or Excel file path.")
         sys.exit(1)
 
-    file_path_or_url = sys.argv[1]
+    input_arg = sys.argv[1]
 
-    # If the argument is a URL, call process_page
-    if is_url(file_path_or_url):
-        print(f"Detected page URL: {file_path_or_url}")
-        process_page(file_path_or_url)
+    if is_url(input_arg):
+        print(f"Detected page URL: {input_arg}")
+        process_page(input_arg)
 
-    # If the argument is an Excel file path, call process_excel
-    elif is_excel_file(file_path_or_url):
-        print(f"Detected Excel file: {file_path_or_url}")
-        process_excel(file_path_or_url)
+    elif is_excel_file(input_arg):
+        print(f"Detected Excel file: {input_arg}")
+        process_excel(input_arg)
 
-    # If neither a URL nor an Excel file path, display an error message
     else:
         print("The provided argument is neither a valid URL nor an Excel file path.")
         sys.exit(1)
