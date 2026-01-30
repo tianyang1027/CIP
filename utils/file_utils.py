@@ -1,29 +1,58 @@
 import sys
 import os
 from pathlib import Path
+import re
 
 def resource_path(relative_path: str) -> str:
     """
     Get absolute path to resource, works for dev and for PyInstaller.
     """
-    # PyInstaller bundled runtime path
-    if hasattr(sys, '_MEIPASS'):
-        return os.path.join(sys._MEIPASS, relative_path)
+    if relative_path is None:
+        raise ValueError("resource_path() expected a non-None path")
+    if not isinstance(relative_path, (str, os.PathLike)):
+        raise TypeError(
+            f"resource_path() expected str or os.PathLike, got {type(relative_path).__name__}"
+        )
 
-    # dev environment
-    return os.path.join(os.path.abspath("."), relative_path)
+    p = Path(relative_path)
+    if p.is_absolute():
+        return str(p)
+
+    # PyInstaller bundled runtime path
+    bundle_root = getattr(sys, "_MEIPASS", None)
+    if bundle_root:
+        return str(Path(bundle_root) / p)
+
+    # dev environment: resolve relative to repo root (folder containing utils/)
+    repo_root = Path(__file__).resolve().parents[1]
+    return str(repo_root / p)
 
 
 def load_prompt(filename: str) -> str:
-    """
-    Load the content of a prompt text file and return it as a string.
-    Automatically supports PyInstaller bundled files.
-    """
-    real_path = resource_path(filename)
-    prompt_path = Path(real_path)
 
-    if not prompt_path.exists():
-        raise FileNotFoundError(f"Prompt file not found: {prompt_path}")
+    if filename is None:
+        raise ValueError("load_prompt() expected a non-None filename")
 
-    with prompt_path.open("r", encoding="utf-8") as f:
-        return f.read()
+    include_pattern = re.compile(r"@@INCLUDE:\s*(.+?)\s*@@")
+
+    def _load_inner(name: str, depth: int, seen: set[str]) -> str:
+        if depth > 10:
+            raise ValueError(f"Prompt include depth exceeded for: {name}")
+        if name in seen:
+            raise ValueError(f"Circular @@INCLUDE detected for: {name}")
+
+        real_path = resource_path(name)
+        prompt_path = Path(real_path)
+
+        if not prompt_path.exists():
+            raise FileNotFoundError(f"Prompt file not found: {prompt_path}")
+
+        text = prompt_path.read_text(encoding="utf-8")
+
+        def _replace(match: re.Match) -> str:
+            included = match.group(1).strip()
+            return _load_inner(included, depth + 1, seen | {name})
+
+        return include_pattern.sub(_replace, text)
+
+    return _load_inner(filename, 0, set())

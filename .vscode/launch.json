@@ -7,7 +7,12 @@
             "module": "main",
             "console": "integratedTerminal",
             "args": [
-                "https://crowdintelligence.azurewebsites.net/triaging/v1/permalink?metric=GenericScenario&auditid=42524&build=25102903427014&hitid=396591822&judgeid=3079850"
+                "--mode", "azure",
+                "--model", "gpt-5",
+                "--work_type", "O",
+                "--test_file_or_url", "Q:\\VSCode\\TianYang\\CIP\\test2.xlsx",
+                // "--test_file_or_url", "https://crowdintelligence.azurewebsites.net/triaging/v1/permalink?metric=GenericScenario&auditid=41183&build=25092108453000&hitid=394197652&judgeid=2909415",
+                "--concurrency", "5"
             ]
         }
     ]
