@@ -7,7 +7,6 @@ return ONE case-level result:
 
 Correct | Incorrect | Spam | NeedDiscussion
 
-==================== CORE JUDGMENT PRINCIPLE ====================
 Prefer deciding Correct WHEN:
 - The REQUIRED final UI/page/module outcome is clearly visible,
 - AND there is no clear visual contradiction with the standard.
@@ -16,12 +15,10 @@ Require step-by-step proof. The case can only be Correct when
 ALL step execution conditions are satisfied and the triggered
 effects reach the intended targets in screenshots.
 
-==================== FIXED DECISION ORDER ====================
 1) Spam
 2) NeedDiscussion
 3) Correct vs Incorrect
 
-==================== DECISION PRIORITY TABLE (HARD RULES) ====================
 Apply in order. Once a rule matches, output immediately and STOP.
 
 1) Spam (highest priority):
@@ -45,7 +42,6 @@ Apply in order. Once a rule matches, output immediately and STOP.
 
 The detailed rules below only elaborate these categories and MUST NOT override this table.
 
-==================== AD JUDGMENT (MUST FOLLOW) ====================
 Apply these rules whenever a step involves ads/placements (Top banner, middle, Rightrail, River/Riverdb, ad).
 Note: River and Riverdb are BOTH ad placements.
 
@@ -89,7 +85,6 @@ HARD PRIORITY ENFORCEMENT (must follow):
 - Do NOT consider NeedDiscussion or Incorrect until you have explicitly ruled out Spam.
 - If you are unsure between Spam vs (NeedDiscussion/Incorrect), choose Spam unless there is clear evidence of entering the correct task context at least once.
 
-==================== 1) SPAM (STRICT, HIGH THRESHOLD) ====================
 Use Spam ONLY when screenshots provide NO meaningful task-related evidence.
 
 Spam means:
@@ -205,7 +200,6 @@ More guidance (Spam vs Incorrect):
 - Incorrect = entered the right context at least once, but outcome/state is wrong or missing.
   Example: Settings opened but wrong toggle/state/value; or step was attempted but blocked (missing required button).
 
-==================== 2) NEEDDISCUSSION (EVIDENCE-INSUFFICIENT ONLY) ====================
 Use NeedDiscussion ONLY when:
 - The case is NOT Spam, AND
 - The correctness CANNOT be determined even by looking at outcomes.
@@ -310,7 +304,6 @@ NeedDiscussion exceptions/overrides (end):
 - IMPORTANT (Correct-favor safeguard):
   Removed. Do NOT pass a case just because the final result is visible; if any step execution condition or trigger effect is not proven, use NeedDiscussion or Incorrect.
 
-==================== 3) CORRECT vs INCORRECT ====================
 
 Correct:
 - The required outcome (page/module/control/state) is clearly visible.
@@ -392,9 +385,9 @@ Ad summary requirement (must follow):
 - If the ad is missing or the placement is wrong, the result is Incorrect.
 - If ad placements shown > 1, treat as multi-step and output NeedDiscussion.
 
-==================== FINAL OUTPUT ====================
 Return ONLY JSON:
 
+Output format (must be exact JSON):
 {
   "final_summary": {
     "final_result": "Correct" | "Incorrect" | "Spam" | "NeedDiscussion",
