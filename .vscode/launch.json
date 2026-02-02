@@ -9,7 +9,7 @@
             "args": [
                 "--mode", "azure",
                 "--model", "gpt-5",
-                "--work_type", "O",
+                "--work_type", "C",
                 "--test_file_or_url", "Q:\\VSCode\\TianYang\\CIP\\test2.xlsx",
                 // "--test_file_or_url", "https://crowdintelligence.azurewebsites.net/triaging/v1/permalink?metric=GenericScenario&auditid=41183&build=25092108453000&hitid=394197652&judgeid=2909415",
                 "--concurrency", "1"
