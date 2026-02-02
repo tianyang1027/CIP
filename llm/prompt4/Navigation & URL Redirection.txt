@@ -57,12 +57,11 @@ Special clarifications for Quick links steps:
 - Do not mark Correct if the screenshot shows only a generic page without identifiable branding or a readable URL.
 - Explicit rule: The Microsoft Edge welcome/setup page must be judged Incorrect for this step; it is a clearly identifiable non-target page and does not evidence navigation to the intended destination.
 
-Additions for "go back" steps:
-- Back/forward actions must still end on the intended destination and be proven by the same evidence rules above.
-- Seeing the back button, history UI, or a claim of back navigation is insufficient; the final frame must show the destination page with required evidence.
-- If back navigation lands on a non-target page (e.g., Edge welcome/setup, Microsoft Start feed, error page) → Incorrect.
-
-Examples:
-- Correct: Address bar shows https://www.ebay.de/... and eBay branding/content is visible (cookie banner allowed); tab behavior, if specified, is shown correctly.
-- Incorrect: Final page shows the Microsoft Edge welcome/setup screen, a different unrelated site than the clicked tile, or an error page.
-- NeedDiscussion: Some content is visible but URL is unreadable and branding is ambiguous; cannot confirm destination.
+Additional clarification for "copy link for misdirecting Quick link" descriptions (like this case):
+- These descriptions explain what the tester should do when a Quick link does NOT redirect correctly (highlight link name, right‑click tile, choose "Copy link", and record URL).
+- For judgment, you still evaluate ONLY whether the visible evidence shows a valid destination page for the Quick link.
+- If the screenshot shows a correctly loaded, clearly branded destination page (e.g., ebay.de with eBay branding), mark the step as Correct, even though the textual instructions mention the misdirection/copy‑link fallback.
+- Do NOT require evidence of highlighting, right‑click context menu, or copied URL unless the test case explicitly states that the link failed and that the copied URL itself is the verification target.
+- If the screenshot instead shows a non-target page, an error page, or Edge welcome/setup, mark Incorrect.
+- If it is unclear whether any destination loaded and no URL/branding is readable, use NeedDiscussion.
+- Never infer that the link failed or succeeded based solely on the presence of the fallback text; rely on what the final image actually shows.

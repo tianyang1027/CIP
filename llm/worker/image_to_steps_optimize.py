@@ -4,7 +4,7 @@ import asyncio
 from pathlib import Path
 from llm.client_manager import ClientManager
 from enums.issue_enum import IssueEnum, SceneEnum, ScenarioEnum
-from utils.file_utils import load_prompt, resource_path
+from utils.file_utils import load_prompt, resource_path, get_prompt_file
 from utils.parameters import parse_parameters
 from llm.agents.planer_agent import Planner
 # from llm.tools import SemanticMemory
@@ -139,78 +139,6 @@ Output actions for EACH Section in the following JSON format:
 """
 
 
-def _get_prompt_file(issue_type: str) -> str | None:
-    key = str(issue_type).strip() if issue_type is not None else ""
-
-    prompt_files = {
-        # Issue-type prompts (values)
-        IssueEnum.FEATURE_NOT_FOUND.value: "llm/prompts/image_feature_not_found_prompt.txt",
-        IssueEnum.NO_ISSUE_FOUND.value: "llm/prompts/image_no_issue_found_prompt.txt",
-        IssueEnum.ISSUE_FOUND.value: "llm/prompts/image_issue_found_prompt.txt",
-
-        # Step-type prompts: accept BOTH enum value ("UI Interaction") and enum name ("UI_INTERACTION")
-        SceneEnum.UI_INTERACTION.value: "llm/prompt3/UI_INTERACTION.txt",
-        SceneEnum.UI_INTERACTION.name: "llm/prompt3/UI_INTERACTION.txt",
-        SceneEnum.STATE_VERIFICATION.value: "llm/prompt3/STATE_VERIFICATION.txt",
-        SceneEnum.STATE_VERIFICATION.name: "llm/prompt3/STATE_VERIFICATION.txt",
-        SceneEnum.CONDITIONAL.value: "llm/prompt3/CONDITIONAL.txt",
-        SceneEnum.CONDITIONAL.name: "llm/prompt3/CONDITIONAL.txt",
-        SceneEnum.NAVIGATION.value: "llm/prompt3/NAVIGATION.txt",
-        SceneEnum.NAVIGATION.name: "llm/prompt3/NAVIGATION.txt",
-        SceneEnum.WAITING.value: "llm/prompt3/WAITING.txt",
-        SceneEnum.WAITING.name: "llm/prompt3/WAITING.txt",
-        SceneEnum.DESCRIPTIVE.value: "llm/prompt3/DESCRIPTIVE.txt",
-        SceneEnum.DESCRIPTIVE.name: "llm/prompt3/DESCRIPTIVE.txt",
-        SceneEnum.SCROLL.value: "llm/prompt3/SCROLL.txt",
-        SceneEnum.SCROLL.name: "llm/prompt3/SCROLL.txt",
-        SceneEnum.INPUT.value: "llm/prompt3/INPUT.txt",
-        SceneEnum.INPUT.name: "llm/prompt3/INPUT.txt",
-        ScenarioEnum.ACCESSIBILITY_KEYBOARD_NAVIGATION.value: "llm/prompt4/Accessibility & Keyboard Navigation.txt",
-        ScenarioEnum.ACCESSIBILITY_KEYBOARD_NAVIGATION.name: "llm/prompt4/Accessibility & Keyboard Navigation.txt",
-        ScenarioEnum.ADVERTISING_VERIFICATION_REPORTING.value: "llm/prompt4/Advertising Verification & Reporting.txt",
-        ScenarioEnum.ADVERTISING_VERIFICATION_REPORTING.name: "llm/prompt4/Advertising Verification & Reporting.txt",
-        ScenarioEnum.APPEARANCE_THEME_SETTINGS.value: "llm/prompt4/Appearance & Theme Settings.txt",
-        ScenarioEnum.APPEARANCE_THEME_SETTINGS.name: "llm/prompt4/Appearance & Theme Settings.txt",
-        ScenarioEnum.AUTHENTICATION_USER_PROFILE_MANAGEMENT.value: "llm/prompt4/Authentication & User Profile Management.txt",
-        ScenarioEnum.AUTHENTICATION_USER_PROFILE_MANAGEMENT.name: "llm/prompt4/Authentication & User Profile Management.txt",
-        ScenarioEnum.BROWSER_SETTINGS_CONFIGURATION.value: "llm/prompt4/Browser Settings & Configuration.txt",
-        ScenarioEnum.BROWSER_SETTINGS_CONFIGURATION.name: "llm/prompt4/Browser Settings & Configuration.txt",
-        ScenarioEnum.CAROUSEL_SLIDER_CONTROLS.value: "llm/prompt4/Carousel & Slider Controls.txt",
-        ScenarioEnum.CAROUSEL_SLIDER_CONTROLS.name: "llm/prompt4/Carousel & Slider Controls.txt",
-        ScenarioEnum.ENVIRONMENT_PRECONDITION_SETUP.value: "llm/prompt4/Environment & Precondition Setup.txt",
-        ScenarioEnum.ENVIRONMENT_PRECONDITION_SETUP.name: "llm/prompt4/Environment & Precondition Setup.txt",
-        ScenarioEnum.LOCALIZATION_INTERNATIONALIZATION.value: "llm/prompt4/Localization & Internationalization.txt",
-        ScenarioEnum.LOCALIZATION_INTERNATIONALIZATION.name: "llm/prompt4/Localization & Internationalization.txt",
-        ScenarioEnum.MEDIA_PLAYBACK_AUDIO_CONTROL.value: "llm/prompt4/Media Playback & Audio Control.txt",
-        ScenarioEnum.MEDIA_PLAYBACK_AUDIO_CONTROL.name: "llm/prompt4/Media Playback & Audio Control.txt",
-        ScenarioEnum.MODALS_POPUPS_NOTIFICATIONS_HANDLING.value: "llm/prompt4/Modals, Popups & Notifications Handling.txt",
-        ScenarioEnum.MODALS_POPUPS_NOTIFICATIONS_HANDLING.name: "llm/prompt4/Modals, Popups & Notifications Handling.txt",
-        ScenarioEnum.NAVIGATION_URL_REDIRECTION.value: "llm/prompt4/Navigation & URL Redirection.txt",
-        ScenarioEnum.NAVIGATION_URL_REDIRECTION.name: "llm/prompt4/Navigation & URL Redirection.txt",
-        ScenarioEnum.SEARCH_FUNCTIONALITY_SERP_MODULE_VALIDATION.value: "llm/prompt4/Search Functionality & SERP Module Validation.txt",
-        ScenarioEnum.SEARCH_FUNCTIONALITY_SERP_MODULE_VALIDATION.name: "llm/prompt4/Search Functionality & SERP Module Validation.txt",
-        ScenarioEnum.TAB_WINDOW_MANAGEMENT.value: "llm/prompt4/Tab & Window Management.txt",
-        ScenarioEnum.TAB_WINDOW_MANAGEMENT.name: "llm/prompt4/Tab & Window Management.txt",
-        ScenarioEnum.UI_VISIBILITY_LAYOUT_RENDERING_VERIFICATION.value: "llm/prompt4/UI Visibility, Layout & Rendering Verification.txt",
-        ScenarioEnum.UI_VISIBILITY_LAYOUT_RENDERING_VERIFICATION.name: "llm/prompt4/UI Visibility, Layout & Rendering Verification.txt",
-        ScenarioEnum.WIDGETS_TASKBAR_OS_LEVEL_INTEGRATIONS.value: "llm/prompt4/Widgets, Taskbar & OS-Level Integrations.txt",
-        ScenarioEnum.WIDGETS_TASKBAR_OS_LEVEL_INTEGRATIONS.name: "llm/prompt4/Widgets, Taskbar & OS-Level Integrations.txt",
-    }
-
-    prompt_path = prompt_files.get(key)
-    if not prompt_path:
-        return None
-
-    preferred = prompt_path.replace("llm/prompts/", "llm/prompt3/")
-    try:
-        if Path(resource_path(preferred)).exists():
-            return preferred
-    except Exception:
-        # If resource resolution fails for any reason, fall back.
-        pass
-
-    return prompt_path
-
 def _strip_code_fences(text: str) -> str:
 
     if not text:
@@ -300,89 +228,6 @@ def _normalize_final_result(value: str | None) -> str:
     return "NeedDiscussion"
 
 
-def check_steps_with_image_matching(steps_json, issue_type, judge_comment):
-
-    system_prompt = load_prompt(_get_prompt_file(issue_type))
-
-    if issue_type in [IssueEnum.ISSUE_FOUND.value, IssueEnum.FEATURE_NOT_FOUND.value]:
-        system_prompt = system_prompt.replace("{judge_comment}", judge_comment)
-
-    user_content_structured = []
-    for step in steps_json:
-
-        user_content_structured.append({
-            "type": "text",
-            "text": f"=== Step {step['step_number']} ==="
-        })
-
-        user_content_structured.append({
-            "type": "text",
-            "text": f"Standard Text: {step['standard_text']}"
-        })
-
-        if step.get("standard_image_url"):
-            user_content_structured.append({
-                "type": "text",
-                "text": "Standard Image:"
-            })
-            user_content_structured.append({
-                "type": "image_url",
-                "image_url": {"url": step["standard_image_url"]}
-            })
-        else:
-            user_content_structured.append({
-                "type": "text",
-                "text": "No Standard Image Provided."
-            })
-
-        if step.get("actual_image_url"):
-            user_content_structured.append({
-                "type": "text",
-                "text": "Actual Image:"
-            })
-            user_content_structured.append({
-                "type": "image_url",
-                "image_url": {"url": step["actual_image_url"]}
-            })
-        else:
-            user_content_structured.append({
-                "type": "text",
-                "text": "No Actual Image Provided."
-            })
-
-
-    args = parse_parameters()
-    client = ClientManager(args=args)
-    content = client.chat_completion(
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_content_structured},
-        ]
-    )
-
-    parsed = _try_parse_json_object(content)
-    if not parsed:
-        print("Warning: model output is not valid JSON.")
-        print("Model output:")
-        print(content)
-        return {
-            "final_summary": {
-                "final_result": "NeedDiscussion",
-                "reason": "Model output was not valid JSON; manual review required.",
-            }
-        }
-
-    # Validate final_summary
-    final = parsed.get("final_summary", {})
-    final_result = final.get("final_result")
-    if final_result not in {"Correct", "Incorrect", "Spam", "NeedDiscussion"}:
-        final_result = "NeedDiscussion"
-        final_reason = "Model returned unknown final_result, manual review required"
-        final = {"final_result": final_result, "reason": final_reason}
-
-    return {"final_summary": final}
-
-
 async def optimization_steps_with_image_matching_async(step_type_rule, user_content_structured):
 
 
@@ -447,7 +292,7 @@ async def check_steps_with_image_matching_async(steps_json, issue_type, judge_co
 
             step_type = step.get("step_type", "")
             print(f"Processing step type: {step_type}")
-            step_type_rule_path = _get_prompt_file(step_type)
+            step_type_rule_path = get_prompt_file(step_type)
             step_type_rule = load_prompt(step_type_rule_path) if step_type_rule_path else ""
 
             system_prompt_step = COMPARISON_SYSTEM_PROMPT.format(
@@ -632,7 +477,7 @@ async def optimize_prompt_async(steps_json, issue_type, judge_comment, human_jud
                 break
 
             step_type = str(step.get("step_type", "")).strip()
-            prompt_path = _get_prompt_file(step_type)
+            prompt_path = get_prompt_file(step_type)
             if not prompt_path:
                 return {
                     "final_summary": {
@@ -646,13 +491,14 @@ async def optimize_prompt_async(steps_json, issue_type, judge_comment, human_jud
                 step_type_rule = load_prompt(prompt_path) or ""
                 prompt_cache[prompt_path] = step_type_rule
 
-            standard_text = step.get("text", "")
-            actual_text = step.get("actual_text", "")
+
+            ai_optimize_supple_text = step.get("text", "")
+            raw_text = step.get("actual_text", "")
             image_url = step.get("actual_image_url") or step.get("standard_image_url")
 
             user_content_structured = [
-                {"type": "text", "text": f"Step standard description: {standard_text}"},
-                {"type": "text", "text": f"Step actual description: {actual_text}"},
+                {"type": "text", "text": f"Step AI optimization and supplementation description: {ai_optimize_supple_text}"},
+                {"type": "text", "text": f"Step actual description: {raw_text}"},
             ]
             if _is_valid_image_url(image_url):
                 user_content_structured.append({"type": "image_url", "image_url": {"url": image_url.strip()}})
@@ -691,8 +537,8 @@ async def optimize_prompt_async(steps_json, issue_type, judge_comment, human_jud
                         saved = _append_example_case_if_new(
                             example_case,
                             step_type=step_type,
-                            step_raw_desc=standard_text,
-                            step_ai_desc=actual_text,
+                            step_raw_desc=raw_text,
+                            step_ai_desc=ai_optimize_supple_text,
                             step_success_reason=ai_judge_reason,
                         )
                         if saved:
@@ -750,13 +596,6 @@ async def optimize_prompt_async(steps_json, issue_type, judge_comment, human_jud
             await client.aclose()
         except Exception:
             pass
-
-
-def compare_operations(standard_steps, actual_steps, issue_type, judge_comment):
-
-    steps_json = build_steps_json(standard_steps, actual_steps)
-    result = check_steps_with_image_matching(steps_json, issue_type, judge_comment)
-    return result
 
 
 async def compare_operations_async(standard_steps, actual_steps, issue_type, judge_comment, human_judge_result, expected_result):

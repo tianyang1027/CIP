@@ -5,6 +5,7 @@ class IssueEnum(Enum):
     ISSUE_FOUND = "Issue found"
     FEATURE_NOT_FOUND = "Feature not found"
 
+
 class SceneEnum(Enum):
     UI_INTERACTION = "UI Interaction"
     STATE_VERIFICATION = "State Verification"
@@ -32,4 +33,5 @@ class ScenarioEnum(Enum):
     TAB_WINDOW_MANAGEMENT = 'Tab & Window Management'
     UI_VISIBILITY_LAYOUT_RENDERING_VERIFICATION = 'UI Visibility, Layout & Rendering Verification'
     WIDGETS_TASKBAR_OS_LEVEL_INTEGRATIONS = 'Widgets, Taskbar & OS-Level Integrations'
+    FUNCTIONAL_LAYOUT_SETTING = 'Functional Layout Setting'
 

@@ -24,7 +24,7 @@ Please strictly adhere to the following format when outputting your plan, with `
 ```python
 [{
     "step_number": Step Number,
-    "step_type": "Navigation & URL Redirection" | "UI Visibility, Layout & Rendering Verification" | "Appearance & Theme Settings" | "Browser Settings & Configuration" | "Environment & Precondition Setup" | "Advertising Verification & Reporting" | "Localization & Internationalization" | "Accessibility & Keyboard Navigation" | "Carousel & Slider Controls" | "Media Playback & Audio Control" | "Authentication & User Profile Management" | "Tab & Window Management" | "Modals, Popups & Notifications Handling" | "Search Functionality & SERP Module Validation" | "Widgets, Taskbar & OS-Level Integrations",
+    "step_type": "Navigation & URL Redirection" | "Functional Layout Setting" | "UI Visibility, Layout & Rendering Verification" | "Appearance & Theme Settings" | "Browser Settings & Configuration" | "Environment & Precondition Setup" | "Advertising Verification & Reporting" | "Localization & Internationalization" | "Accessibility & Keyboard Navigation" | "Carousel & Slider Controls" | "Media Playback & Audio Control" | "Authentication & User Profile Management" | "Tab & Window Management" | "Modals, Popups & Notifications Handling" | "Search Functionality & SERP Module Validation" | "Widgets, Taskbar & OS-Level Integrations",
     "text": "English step description, based on the standard text and image.",
 }]
 ```

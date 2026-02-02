@@ -4,7 +4,7 @@ import asyncio
 from pathlib import Path
 from llm.client_manager import ClientManager
 from enums.issue_enum import IssueEnum, SceneEnum
-from utils.file_utils import load_prompt, resource_path
+from utils.file_utils import load_prompt, get_prompt_file, resource_path
 from utils.parameters import parse_parameters
 from llm.agents.planer_agent import Planner
 # from llm.tools import SemanticMemory
@@ -53,47 +53,23 @@ Output actions for EACH Section in the following JSON format:
 """
 
 
-def _get_prompt_file(issue_type: str) -> str | None:
-    key = str(issue_type).strip() if issue_type is not None else ""
+def _get_step_success_reason_by_raw_desc(test_cases: object, raw_text: str) -> str | None:
 
-    prompt_files = {
-        # Issue-type prompts (values)
-        IssueEnum.FEATURE_NOT_FOUND.value: "llm/prompts/image_feature_not_found_prompt.txt",
-        IssueEnum.NO_ISSUE_FOUND.value: "llm/prompts/image_no_issue_found_prompt.txt",
-        IssueEnum.ISSUE_FOUND.value: "llm/prompts/image_issue_found_prompt.txt",
-
-        # Step-type prompts: accept BOTH enum value ("UI Interaction") and enum name ("UI_INTERACTION")
-        SceneEnum.UI_INTERACTION.value: "llm/prompt3/UI_INTERACTION.txt",
-        SceneEnum.UI_INTERACTION.name: "llm/prompt3/UI_INTERACTION.txt",
-        SceneEnum.STATE_VERIFICATION.value: "llm/prompt3/STATE_VERIFICATION.txt",
-        SceneEnum.STATE_VERIFICATION.name: "llm/prompt3/STATE_VERIFICATION.txt",
-        SceneEnum.CONDITIONAL.value: "llm/prompt3/CONDITIONAL.txt",
-        SceneEnum.CONDITIONAL.name: "llm/prompt3/CONDITIONAL.txt",
-        SceneEnum.NAVIGATION.value: "llm/prompt3/NAVIGATION.txt",
-        SceneEnum.NAVIGATION.name: "llm/prompt3/NAVIGATION.txt",
-        SceneEnum.WAITING.value: "llm/prompt3/WAITING.txt",
-        SceneEnum.WAITING.name: "llm/prompt3/WAITING.txt",
-        SceneEnum.DESCRIPTIVE.value: "llm/prompt3/DESCRIPTIVE.txt",
-        SceneEnum.DESCRIPTIVE.name: "llm/prompt3/DESCRIPTIVE.txt",
-        SceneEnum.SCROLL.value: "llm/prompt3/SCROLL.txt",
-        SceneEnum.SCROLL.name: "llm/prompt3/SCROLL.txt",
-        SceneEnum.INPUT.value: "llm/prompt3/INPUT.txt",
-        SceneEnum.INPUT.name: "llm/prompt3/INPUT.txt",
-    }
-
-    prompt_path = prompt_files.get(key)
-    if not prompt_path:
+    raw_key = (raw_text or "").strip()
+    if not raw_key:
+        return None
+    if not isinstance(test_cases, list):
         return None
 
-    preferred = prompt_path.replace("llm/prompts/", "llm/prompt3/")
-    try:
-        if Path(resource_path(preferred)).exists():
-            return preferred
-    except Exception:
-        # If resource resolution fails for any reason, fall back.
-        pass
+    for case in test_cases:
+        if not isinstance(case, dict):
+            continue
+        if str(case.get("step_raw_desc", "")).strip() == raw_key:
+            value = case.get("step_success_reason")
+            return None if value is None else str(value)
+    return None
 
-    return prompt_path
+
 
 def _strip_code_fences(text: str) -> str:
 
@@ -184,89 +160,6 @@ def _normalize_final_result(value: str | None) -> str:
     return "NeedDiscussion"
 
 
-def check_steps_with_image_matching(steps_json, issue_type, judge_comment):
-
-    system_prompt = load_prompt(_get_prompt_file(issue_type))
-
-    if issue_type in [IssueEnum.ISSUE_FOUND.value, IssueEnum.FEATURE_NOT_FOUND.value]:
-        system_prompt = system_prompt.replace("{judge_comment}", judge_comment)
-
-    user_content_structured = []
-    for step in steps_json:
-
-        user_content_structured.append({
-            "type": "text",
-            "text": f"=== Step {step['step_number']} ==="
-        })
-
-        user_content_structured.append({
-            "type": "text",
-            "text": f"Standard Text: {step['standard_text']}"
-        })
-
-        if step.get("standard_image_url"):
-            user_content_structured.append({
-                "type": "text",
-                "text": "Standard Image:"
-            })
-            user_content_structured.append({
-                "type": "image_url",
-                "image_url": {"url": step["standard_image_url"]}
-            })
-        else:
-            user_content_structured.append({
-                "type": "text",
-                "text": "No Standard Image Provided."
-            })
-
-        if step.get("actual_image_url"):
-            user_content_structured.append({
-                "type": "text",
-                "text": "Actual Image:"
-            })
-            user_content_structured.append({
-                "type": "image_url",
-                "image_url": {"url": step["actual_image_url"]}
-            })
-        else:
-            user_content_structured.append({
-                "type": "text",
-                "text": "No Actual Image Provided."
-            })
-
-
-    args = parse_parameters()
-    client = ClientManager(args=args)
-    content = client.chat_completion(
-        messages=[
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": user_content_structured},
-        ]
-    )
-
-    parsed = _try_parse_json_object(content)
-    if not parsed:
-        print("Warning: model output is not valid JSON.")
-        print("Model output:")
-        print(content)
-        return {
-            "final_summary": {
-                "final_result": "NeedDiscussion",
-                "reason": "Model output was not valid JSON; manual review required.",
-            }
-        }
-
-    # Validate final_summary
-    final = parsed.get("final_summary", {})
-    final_result = final.get("final_result")
-    if final_result not in {"Correct", "Incorrect", "Spam", "NeedDiscussion"}:
-        final_result = "NeedDiscussion"
-        final_reason = "Model returned unknown final_result, manual review required"
-        final = {"final_result": final_result, "reason": final_reason}
-
-    return {"final_summary": final}
-
-
 async def check_steps_with_image_matching_async(steps_json, issue_type, judge_comment):
 
     planner = Planner()
@@ -291,7 +184,7 @@ async def check_steps_with_image_matching_async(steps_json, issue_type, judge_co
 
             step_type = step.get("step_type", "")
             print(f"Processing step type: {step_type}")
-            step_type_rule_path = _get_prompt_file(step_type)
+            step_type_rule_path = get_prompt_file(step_type)
             step_type_rule = load_prompt(step_type_rule_path) if step_type_rule_path else ""
 
             system_prompt_step = COMPARISON_SYSTEM_PROMPT.format(
@@ -301,12 +194,22 @@ async def check_steps_with_image_matching_async(steps_json, issue_type, judge_co
             step_number = step.get("step_number", 999)
             user_content_structured = []
 
-            standard_text = step.get("text", "")
-            actual_text = step.get("actual_text", "")
-
+            ai_optimize_supple_text = step.get("text", "")
+            raw_text = step.get("actual_text", "")
             image_url = step.get("actual_image_url") or step.get("standard_image_url")
 
+            test_cases_path = Path(resource_path("llm/semanticmemory/cases.json"))
+            test_cases: list[dict] = []
+            try:
+                if test_cases_path.exists():
+                    raw_cases = (test_cases_path.read_text(encoding="utf-8") or "").strip()
+                    test_cases = json.loads(raw_cases) if raw_cases else []
+            except Exception:
+                test_cases = []
+
+            matched_step_success_reason = _get_step_success_reason_by_raw_desc(test_cases, raw_text)
             # aa = semantic_memory.query_steps(standard_text)
+
             # print(f"RAG return: {aa}")
 
             old_duplicates: list[int] = []
@@ -325,11 +228,22 @@ async def check_steps_with_image_matching_async(steps_json, issue_type, judge_co
                 old_duplicates = []
 
             user_content_structured = [
-                {"type": "text", "text": f"Step standard description: {standard_text}"},
-                # {"type": "text", "text": f"Duplicate image step numbers:{aa}, please consider this information when making judgments."},
+                {"type": "text", "text": f"Step standard description: {ai_optimize_supple_text}"},
                 {"type": "text", "text": f"Duplicate image step numbers:{old_duplicates}, please consider this information when making judgments."},
-                {"type": "text", "text": f"Step actual description: {actual_text}"},
+                {"type": "text", "text": f"Step actual description: {raw_text}"},
             ]
+
+            if matched_step_success_reason:
+                print(f"matched_step_success_reason: {matched_step_success_reason}")
+                user_content_structured.append(
+                    {
+                        "type": "text",
+                        "text": (
+                            "Matched example-case step_success_reason (same step_raw_desc): "
+                            f"{matched_step_success_reason}"
+                        ),
+                    }
+                )
 
             if isinstance(image_url, str):
                 image_url = image_url.strip()
@@ -395,16 +309,6 @@ async def check_steps_with_image_matching_async(steps_json, issue_type, judge_co
             await client.aclose()
         except Exception:
             pass
-
-
-
-
-
-def compare_operations(standard_steps, actual_steps, issue_type, judge_comment):
-
-    steps_json = build_steps_json(standard_steps, actual_steps)
-    result = check_steps_with_image_matching(steps_json, issue_type, judge_comment)
-    return result
 
 
 async def compare_operations_async(standard_steps, actual_steps, issue_type, judge_comment, human_judge_result, expected_result):
