@@ -5,3 +5,5 @@
 m3e-base/*
 webapp/*
 chroma_store/*
+test/*
+Qwen3-VL-2B-Instruct/

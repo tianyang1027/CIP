@@ -24,11 +24,12 @@ Please strictly adhere to the following format when outputting your plan, with `
 ```python
 [{
     "step_number": Step Number,
-    "step_type": "UI_INTERACTION" | "STATE_VERIFICATION" | "CONDITIONAL" | "NAVIGATION" | "WAITING" | "DESCRIPTIVE" | "INPUT" | "SCROLL",
+    "step_type": "Navigation & URL Redirection" | "UI Visibility, Layout & Rendering Verification" | "Appearance & Theme Settings" | "Browser Settings & Configuration" | "Environment & Precondition Setup" | "Advertising Verification & Reporting" | "Localization & Internationalization" | "Accessibility & Keyboard Navigation" | "Carousel & Slider Controls" | "Media Playback & Audio Control" | "Authentication & User Profile Management" | "Tab & Window Management" | "Modals, Popups & Notifications Handling" | "Search Functionality & SERP Module Validation" | "Widgets, Taskbar & OS-Level Integrations",
     "text": "English step description, based on the standard text and image.",
 }]
 ```
-"""
+""".strip()
+
 
 class Planner:
     def __init__(self):
@@ -46,11 +47,12 @@ class Planner:
             {"role": "system", "content": PLANNER_PROMPT_TEMPLATE},
             {"role": "user", "content": content_structured},
         ]
-        # print("--- 正在生成计划 ---")
+
+        print("--- Generating plan ---")
 
         response_text = self.llm_client.think(messages=messages) or ""
 
-        # print(f"✅ 计划已生成:\n{response_text}")
+        print(f"✅ Plan generated:\n{response_text}")
 
         try:
 
@@ -65,11 +67,11 @@ class Planner:
 
             return plan, group_duplicates
         except (ValueError, SyntaxError, IndexError) as e:
-            print(f"❌ 解析计划时出错: {e}")
-            print(f"原始响应: {response_text}")
+            print(f"❌ Error parsing plan: {e}")
+            print(f"Raw response: {response_text}")
             return [], group_duplicates
         except Exception as e:
-            print(f"❌ 解析计划时发生未知错误: {e}")
+            print(f"❌ Unknown error while parsing plan: {e}")
             return [], group_duplicates
 
     def assemble_json(self, steps_json) -> list[dict]:

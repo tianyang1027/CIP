@@ -3,7 +3,7 @@ import re
 import asyncio
 from pathlib import Path
 from llm.client_manager import ClientManager
-from enums.issue_enum import IssueEnum, SceneEnum
+from enums.issue_enum import IssueEnum, SceneEnum, ScenarioEnum
 from utils.file_utils import load_prompt, resource_path
 from utils.parameters import parse_parameters
 from llm.agents.planer_agent import Planner
@@ -165,6 +165,36 @@ def _get_prompt_file(issue_type: str) -> str | None:
         SceneEnum.SCROLL.name: "llm/prompt3/SCROLL.txt",
         SceneEnum.INPUT.value: "llm/prompt3/INPUT.txt",
         SceneEnum.INPUT.name: "llm/prompt3/INPUT.txt",
+        ScenarioEnum.ACCESSIBILITY_KEYBOARD_NAVIGATION.value: "llm/prompt4/Accessibility & Keyboard Navigation.txt",
+        ScenarioEnum.ACCESSIBILITY_KEYBOARD_NAVIGATION.name: "llm/prompt4/Accessibility & Keyboard Navigation.txt",
+        ScenarioEnum.ADVERTISING_VERIFICATION_REPORTING.value: "llm/prompt4/Advertising Verification & Reporting.txt",
+        ScenarioEnum.ADVERTISING_VERIFICATION_REPORTING.name: "llm/prompt4/Advertising Verification & Reporting.txt",
+        ScenarioEnum.APPEARANCE_THEME_SETTINGS.value: "llm/prompt4/Appearance & Theme Settings.txt",
+        ScenarioEnum.APPEARANCE_THEME_SETTINGS.name: "llm/prompt4/Appearance & Theme Settings.txt",
+        ScenarioEnum.AUTHENTICATION_USER_PROFILE_MANAGEMENT.value: "llm/prompt4/Authentication & User Profile Management.txt",
+        ScenarioEnum.AUTHENTICATION_USER_PROFILE_MANAGEMENT.name: "llm/prompt4/Authentication & User Profile Management.txt",
+        ScenarioEnum.BROWSER_SETTINGS_CONFIGURATION.value: "llm/prompt4/Browser Settings & Configuration.txt",
+        ScenarioEnum.BROWSER_SETTINGS_CONFIGURATION.name: "llm/prompt4/Browser Settings & Configuration.txt",
+        ScenarioEnum.CAROUSEL_SLIDER_CONTROLS.value: "llm/prompt4/Carousel & Slider Controls.txt",
+        ScenarioEnum.CAROUSEL_SLIDER_CONTROLS.name: "llm/prompt4/Carousel & Slider Controls.txt",
+        ScenarioEnum.ENVIRONMENT_PRECONDITION_SETUP.value: "llm/prompt4/Environment & Precondition Setup.txt",
+        ScenarioEnum.ENVIRONMENT_PRECONDITION_SETUP.name: "llm/prompt4/Environment & Precondition Setup.txt",
+        ScenarioEnum.LOCALIZATION_INTERNATIONALIZATION.value: "llm/prompt4/Localization & Internationalization.txt",
+        ScenarioEnum.LOCALIZATION_INTERNATIONALIZATION.name: "llm/prompt4/Localization & Internationalization.txt",
+        ScenarioEnum.MEDIA_PLAYBACK_AUDIO_CONTROL.value: "llm/prompt4/Media Playback & Audio Control.txt",
+        ScenarioEnum.MEDIA_PLAYBACK_AUDIO_CONTROL.name: "llm/prompt4/Media Playback & Audio Control.txt",
+        ScenarioEnum.MODALS_POPUPS_NOTIFICATIONS_HANDLING.value: "llm/prompt4/Modals, Popups & Notifications Handling.txt",
+        ScenarioEnum.MODALS_POPUPS_NOTIFICATIONS_HANDLING.name: "llm/prompt4/Modals, Popups & Notifications Handling.txt",
+        ScenarioEnum.NAVIGATION_URL_REDIRECTION.value: "llm/prompt4/Navigation & URL Redirection.txt",
+        ScenarioEnum.NAVIGATION_URL_REDIRECTION.name: "llm/prompt4/Navigation & URL Redirection.txt",
+        ScenarioEnum.SEARCH_FUNCTIONALITY_SERP_MODULE_VALIDATION.value: "llm/prompt4/Search Functionality & SERP Module Validation.txt",
+        ScenarioEnum.SEARCH_FUNCTIONALITY_SERP_MODULE_VALIDATION.name: "llm/prompt4/Search Functionality & SERP Module Validation.txt",
+        ScenarioEnum.TAB_WINDOW_MANAGEMENT.value: "llm/prompt4/Tab & Window Management.txt",
+        ScenarioEnum.TAB_WINDOW_MANAGEMENT.name: "llm/prompt4/Tab & Window Management.txt",
+        ScenarioEnum.UI_VISIBILITY_LAYOUT_RENDERING_VERIFICATION.value: "llm/prompt4/UI Visibility, Layout & Rendering Verification.txt",
+        ScenarioEnum.UI_VISIBILITY_LAYOUT_RENDERING_VERIFICATION.name: "llm/prompt4/UI Visibility, Layout & Rendering Verification.txt",
+        ScenarioEnum.WIDGETS_TASKBAR_OS_LEVEL_INTEGRATIONS.value: "llm/prompt4/Widgets, Taskbar & OS-Level Integrations.txt",
+        ScenarioEnum.WIDGETS_TASKBAR_OS_LEVEL_INTEGRATIONS.name: "llm/prompt4/Widgets, Taskbar & OS-Level Integrations.txt",
     }
 
     prompt_path = prompt_files.get(key)
@@ -592,6 +622,7 @@ async def optimize_prompt_async(steps_json, issue_type, judge_comment, human_jud
         history_steps: list[dict] = []
 
         for step in plans:
+            print(f"Optimizing step type: {step.get('step_type', '')}")
             try:
                 step_number = int(step.get("step_number", 999))
             except Exception:
@@ -669,7 +700,6 @@ async def optimize_prompt_async(steps_json, issue_type, judge_comment, human_jud
                         else:
                             print("example_case already exists; skip saving")
                     except Exception:
-                        # Non-fatal: optimization can still proceed.
                         pass
 
 
@@ -701,22 +731,18 @@ async def optimize_prompt_async(steps_json, issue_type, judge_comment, human_jud
                 prompt_cache[prompt_path] = step_type_rule
                 touched_paths.add(prompt_path)
 
-            # Advance history only for steps the human says are correct.
             if desired_result == "Correct" and ai_judge_result == "Correct":
                 history_steps.append(
                     {"step_number": step_number, "final_result": "Correct", "reason": ""}
                 )
             else:
-                # Stop after reaching the first-problem step.
                 if step_number == int(result_number):
                     break
 
-        # Persist any updated prompts.
         for path in touched_paths:
             with open(path, "w", encoding="utf-8") as f:
                 f.write(prompt_cache.get(path, ""))
 
-        # Re-run the full case judgment using the updated prompt files.
         return await check_steps_with_image_matching_async(steps_json, issue_type, judge_comment)
 
     finally:

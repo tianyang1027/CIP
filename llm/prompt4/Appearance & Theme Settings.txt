@@ -1,0 +1,77 @@
+Step type: Appearance & Theme Settings
+
+Purpose:
+- Validate appearance/theme related behaviors (Light/Dark/System theme, page theme, UI theme, colors, backgrounds) using provided evidence.
+- Prefer visual evidence (screenshots/video frames). Avoid assumptions about what theme is active unless it is clearly indicated.
+
+Allowed decision outputs (MUST use exactly one):
+- Correct, Incorrect, NeedDiscussion, Spam.
+
+Spam (override):
+- Select Spam only if the evidence is clearly irrelevant to appearance/theme settings (unrelated apps/pages) or is duplicate/no-action evidence with no attempt to demonstrate theme/appearance behavior.
+
+Zero-inference policy:
+- Judge only what is visible in the evidence.
+- Do not infer the OS theme or browser theme from vague colors alone if the UI is cropped/unclear.
+- Do not assume a toggle was changed unless the before/after state is shown.
+
+Common scopes for this step (map the step intent to one; if unclear → NeedDiscussion):
+1) Theme selection: switching Light/Dark/System (or equivalent) in settings.
+2) UI appearance: browser UI or app chrome changes (toolbars, menus, frame colors).
+3) Page appearance: page content theme changes (background/text contrast) due to theme.
+4) Persistence: theme remains after refresh/reopen/new tab.
+5) High-level appearance options: font size, page zoom, layout density, backgrounds (only if the step explicitly targets them).
+
+Evidence requirements:
+- For theme selection: must show the setting control and the selected state (radio/toggle/selected option).
+- For verifying change: must show a before/after pair (or sequence) where the UI/page appearance is visibly different AND consistent with the chosen theme.
+- For persistence: must show evidence after refresh/reopen/new tab (sequence), not just a single frame.
+- If the setting area or the resulting UI is too cropped/blurry to confirm the state → NeedDiscussion.
+
+Key definitions:
+- Light/Dark/System: any explicit theme selector indicating which theme is active.
+- Visible change: clear, unambiguous change to UI/page that corresponds to a theme switch (not just slight rendering differences).
+- Persistence: the selected theme remains applied after a navigation or restart action shown in evidence.
+
+Judging rubric:
+
+Correct when:
+- The step’s intended scope is clearly demonstrated by evidence, AND
+- The theme/appearance setting state is visible and unambiguous, AND
+- The observed UI/page change matches the selected theme, OR the step intent is only to confirm the selector state (and it is clearly shown), AND
+- If persistence is required, the after-action state is shown and consistent.
+
+Incorrect if ANY are true (based on evidence):
+- The expected theme/appearance control is missing where the step claims it exists.
+- The selected theme shown does not match the required one.
+- The before/after does not show the claimed change, or shows the opposite.
+- Persistence is required but evidence shows the theme reverted or did not apply.
+
+NeedDiscussion when:
+- The step intent is about theme/appearance but evidence does not show the setting state or a meaningful before/after.
+- Evidence is ambiguous (cropped/blurry; cannot confirm selected option or resulting UI).
+- The step mixes multiple goals (theme + unrelated settings) without sufficient evidence for each.
+
+Spam when:
+- Evidence is irrelevant to theme/appearance or contains no meaningful attempt.
+
+Decision tree (apply in order):
+0) Spam override: irrelevant/duplicate/no-action → Spam.
+1) Scope match: if step intent cannot be mapped to the scopes above → NeedDiscussion.
+2) Evidence sufficiency:
+	- Selector-state tasks: need clear screenshot of the selector and selected value.
+	- Change verification tasks: need before/after showing change.
+	- Persistence tasks: need sequence after refresh/reopen.
+	If not met → NeedDiscussion.
+3) Evaluate:
+	- If required state/change is shown and consistent → Correct.
+	- If state/change is clearly wrong/missing/reverted → Incorrect.
+
+Strong tie-breakers:
+- If you cannot clearly see the selected theme option, do not guess based on page colors; return NeedDiscussion.
+- If the only evidence is a single screenshot of a page (no settings UI, no before/after) and the step claims a theme change, default to NeedDiscussion.
+
+Suggested capture guidance (what to ask for when NeedDiscussion):
+- Capture the settings page showing the theme selector with the chosen option highlighted.
+- Capture a before/after of the same page area (or browser UI) to show the change.
+- If testing persistence, capture after refresh (Ctrl+R) or reopen sequence with the theme still applied.

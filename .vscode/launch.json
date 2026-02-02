@@ -12,7 +12,7 @@
                 "--work_type", "O",
                 "--test_file_or_url", "Q:\\VSCode\\TianYang\\CIP\\test2.xlsx",
                 // "--test_file_or_url", "https://crowdintelligence.azurewebsites.net/triaging/v1/permalink?metric=GenericScenario&auditid=41183&build=25092108453000&hitid=394197652&judgeid=2909415",
-                "--concurrency", "5"
+                "--concurrency", "1"
             ]
         }
     ]

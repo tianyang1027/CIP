@@ -9,10 +9,8 @@ class HelloAgentsLLM:
         self.client = ClientManager(args=self.args)
 
     def think(self, messages: List[Dict[str, str]], temperature: float = 0) -> str:
-        """
-        调用大语言模型进行思考，并返回其响应。
-        """
-        print(f"🧠 正在调用 {self.args.model} 模型...")
+
+        print(f"🧠 Calling {self.args.model} model...")
         try:
 
             response = self.client.chat_completion(
@@ -21,23 +19,23 @@ class HelloAgentsLLM:
 
             return response
         except Exception as e:
-            print(f"❌ 调用LLM API时发生错误: {e}")
+            print(f"❌ Error while calling LLM API: {e}")
             return None
 
-# --- 客户端使用示例 ---
 if __name__ == '__main__':
+
     try:
         llmClient = HelloAgentsLLM()
 
         exampleMessages = [
             {"role": "system", "content": "You are a helpful assistant that writes Python code."},
-            {"role": "user", "content": "写一个快速排序算法"}
+            {"role": "user", "content": "Write a quicksort algorithm"}
         ]
 
-        print("--- 调用LLM ---")
+        print("--- Calling LLM ---")
         responseText = llmClient.think(exampleMessages)
         if responseText:
-            print("\n\n--- 完整模型响应 ---")
+            print("\n\n--- Full model response ---")
             print(responseText)
 
     except ValueError as e:

@@ -26,28 +26,18 @@ def video_to_image(path, floder):
 
 _DATA_URL_RE = re.compile(r"^data:(?P<mime>[^;]+)?;base64,(?P<b64>.*)$", re.IGNORECASE | re.DOTALL)
 
-
 def _looks_like_base64(s: str) -> bool:
     v = (s or "").strip()
     if not v:
         return False
-    # Heuristic: base64 is usually long and only uses this charset (plus padding).
+
     if len(v) < 64:
         return False
     return re.fullmatch(r"[A-Za-z0-9+/=\s]+", v) is not None
 
 
 def load_image_any(image_input: Any) -> Image.Image:
-    """Load an image from multiple formats.
 
-    Supported:
-    - file path (str/Path)
-    - data URL (data:image/png;base64,....)
-    - raw base64 string (no prefix)
-    - bytes
-    - PIL.Image
-    - numpy array (BGR/RGB)
-    """
     if image_input is None:
         raise ValueError("image_input is None")
 
@@ -72,7 +62,6 @@ def load_image_any(image_input: Any) -> Image.Image:
         if not s:
             raise ValueError("empty image string")
 
-        # Remote URL
         if s.startswith("http://") or s.startswith("https://"):
             import requests
 
@@ -80,10 +69,9 @@ def load_image_any(image_input: Any) -> Image.Image:
             resp.raise_for_status()
             return Image.open(io.BytesIO(resp.content))
 
-        # Local file URL
         if s.startswith("file:"):
             parsed = urlparse(s)
-            # parsed.path is URL-encoded and may start with /C:/ on Windows.
+
             local_path = url2pathname(parsed.path)
             if re.match(r"^/[A-Za-z]:", parsed.path):
                 local_path = local_path.lstrip("\\/")
@@ -95,22 +83,16 @@ def load_image_any(image_input: Any) -> Image.Image:
             raw = base64.b64decode(b64, validate=False)
             return Image.open(io.BytesIO(raw))
 
-        # Raw base64 (no prefix)
         if _looks_like_base64(s):
             raw = base64.b64decode(s, validate=False)
             return Image.open(io.BytesIO(raw))
 
-        # Otherwise treat as file path
         return Image.open(s)
 
     raise TypeError(f"Unsupported image_input type: {type(image_input)}")
 
 
 def phash_image(image_input: Any):
-    """Perceptual hash for an image.
-
-    Accepts file path OR base64/data-url/bytes/PIL/numpy.
-    """
     img = load_image_any(image_input)
     return imagehash.phash(img)
 
@@ -132,13 +114,14 @@ def find_duplicates(folder):
     return duplicates
 
 def remove_duplicates(input_folder, output_folder):
+
     if not os.path.exists(output_folder):
         os.makedirs(output_folder)
 
     hashes = {}
     duplicates = []
 
-    for filename in sorted(os.listdir(input_folder)):  # 按顺序处理
+    for filename in sorted(os.listdir(input_folder)):
         if filename.lower().endswith(('.jpg', '.png', '.jpeg')):
             full_path = os.path.join(input_folder, filename)
 
@@ -149,26 +132,16 @@ def remove_duplicates(input_folder, output_folder):
                 continue
 
             if h in hashes:
-                # 发现重复
                 duplicates.append((filename, hashes[h]))
             else:
-                # 新的唯一图片，记录 hash
                 hashes[h] = filename
-                # 复制到输出目录
                 shutil.copy(full_path, os.path.join(output_folder, filename))
 
     return hashes, duplicates
 
 
 def find_duplicates_in_items(items: Iterable[Any]):
-    """Find duplicate images from an iterable of image inputs.
 
-    Each item can be: file path / data URL / raw base64 / bytes / PIL / numpy.
-
-    Returns:
-      - hashes: dict[str, int]  (hash -> first index)
-      - duplicates: list[tuple[int, int]]  (dup_index, first_index)
-    """
     first_by_hash: dict[str, int] = {}
     duplicates: list[tuple[int, int]] = []
 
@@ -187,17 +160,12 @@ def find_duplicates_in_items(items: Iterable[Any]):
 
 
 def duplicate_pairs_to_groups(duplicates: list[tuple[int, int]]):
-    """Convert (dup_index, first_index) pairs into grouped index lists.
 
-    Example:
-      [(2,0),(3,0),(5,4)] -> [[0,2,3],[4,5]]
-    """
     groups: dict[int, list[int]] = {}
     for dup_idx, first_idx in duplicates:
         g = groups.setdefault(int(first_idx), [int(first_idx)])
         g.append(int(dup_idx))
 
-    # Stable output: sort groups by canonical index, and indices within each group.
     out = []
     for k in sorted(groups.keys()):
         out.append(sorted(set(groups[k])))
@@ -205,12 +173,7 @@ def duplicate_pairs_to_groups(duplicates: list[tuple[int, int]]):
 
 
 def merge_overlapping_groups(groups: list[list[int]]) -> list[list[int]]:
-    """Merge groups that have any intersection (union).
 
-    Example:
-      [[0,1],[1,2],[5,6]] -> [[0,1,2],[5,6]]
-    """
-    # Normalize: drop empties, dedupe, and sort each group.
     normalized = []
     for g in groups or []:
         if not g:
@@ -219,7 +182,6 @@ def merge_overlapping_groups(groups: list[list[int]]) -> list[list[int]]:
     if not normalized:
         return []
 
-    # Union-Find over indices appearing in groups.
     parent: dict[int, int] = {}
 
     def find(x: int) -> int:
@@ -251,18 +213,12 @@ def merge_overlapping_groups(groups: list[list[int]]) -> list[list[int]]:
 
 
 def find_duplicate_groups_in_items(items: Iterable[Any]):
-    """Find duplicates and return groups as list-of-lists of indices."""
     _, duplicates = find_duplicates_in_items(items)
     return duplicate_pairs_to_groups(duplicates)
 
 
 def find_duplicate_indices_in_items(items: Iterable[Any], *, one_based: bool = False) -> list[int]:
-    """Return indices of duplicate images (excluding the first occurrence).
 
-    Example (0-based):
-      items=[A,B,A,C,B] -> [2,4]
-    If one_based=True -> [3,5]
-    """
     _, duplicates = find_duplicates_in_items(items)
     dup_indices = [dup_idx for dup_idx, _ in duplicates]
     if one_based:
@@ -271,25 +227,17 @@ def find_duplicate_indices_in_items(items: Iterable[Any], *, one_based: bool = F
 
 
 def find_duplicate_indices_in_base64_list(images_base64: list[str], *, one_based: bool = False) -> list[int]:
-    """Convenience wrapper for base64 list input.
 
-    Accepts either raw base64 strings or data URLs (data:image/...;base64,...).
-    Returns duplicate image indices (excluding the first occurrence).
-    """
     return find_duplicate_indices_in_items(images_base64, one_based=one_based)
 
 
 def find_duplicate_indices_in_url_list(image_urls: list[str], *, one_based: bool = False) -> list[int]:
-    """Convenience wrapper for URL list input.
 
-    Supports http/https URLs and file:// URLs.
-    Returns duplicate image indices (excluding the first occurrence).
-    """
     return find_duplicate_indices_in_items(image_urls, one_based=one_based)
 
 
 def dedupe_items(items: Iterable[Any]):
-    """Return unique items (keep first occurrence), plus duplicates mapping."""
+
     items_list = list(items)
     first_by_hash, duplicates = find_duplicates_in_items(items_list)
     dup_set = {dup_idx for dup_idx, _ in duplicates}
